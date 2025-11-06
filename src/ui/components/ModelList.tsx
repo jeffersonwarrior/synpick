@@ -35,6 +35,22 @@ export const ModelList: React.FC<ModelListProps> = ({
           <Text color="gray" dimColor>
     {'    '}Provider: {model.getProvider()}
           </Text>
+          {(model as any).context_length && (
+            <>
+              <Newline />
+              <Text color="gray" dimColor>
+        {'    '}Context: {Math.round((model as any).context_length / 1024)}K tokens
+              </Text>
+            </>
+          )}
+          {(model as any).quantization && (
+            <>
+              <Newline />
+              <Text color="gray" dimColor>
+        {'    '}Quantization: {(model as any).quantization}
+              </Text>
+            </>
+          )}
           {model.owned_by && (
             <>
               <Newline />

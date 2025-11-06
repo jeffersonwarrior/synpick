@@ -163,7 +163,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                   <Box marginLeft={4}>
                     <Text color="gray" dimColor>
                       Provider: {model.getProvider()}
-                      {model.owned_by && ` | Owner: ${model.owned_by}`}
+                      {(model as any).context_length && ` | Context: ${Math.round((model as any).context_length / 1024)}K`}
+                      {(model as any).quantization && ` | ${model.quantization}`}
                     </Text>
                   </Box>
                 </Box>

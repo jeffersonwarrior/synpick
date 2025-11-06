@@ -108,11 +108,11 @@ export class UserInterface {
       return null;
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const { waitUntilExit } = render(
         <ModelSelector
           models={models}
-          onSelect={(model) => {
+          onSelect={model => {
             this.success(`Selected model: ${model.getDisplayName()}`);
             resolve(model);
           }}
@@ -148,7 +148,7 @@ export class UserInterface {
 
   // Ask for user input (simple)
   async askQuestion(question: string, defaultValue?: string): Promise<string> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const readline = require('readline');
       const rl = readline.createInterface({
         input: process.stdin,
@@ -165,7 +165,7 @@ export class UserInterface {
 
   // Ask for password input (masked with asterisks)
   async askPassword(question: string): Promise<string> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const readline = require('readline');
 
       // Store original settings
@@ -234,9 +234,7 @@ export class UserInterface {
 
   // Show status message using Ink component
   showStatus(type: 'info' | 'success' | 'warning' | 'error', message: string): void {
-    const { waitUntilExit } = render(
-      <StatusMessage type={type} message={message} />
-    );
+    const { waitUntilExit } = render(<StatusMessage type={type} message={message} />);
     waitUntilExit();
   }
 
