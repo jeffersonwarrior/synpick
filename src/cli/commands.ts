@@ -51,14 +51,25 @@ export function createProgram(): Command {
       await app.run({ ...options, additionalArgs });
     });
 
-  // Model selection command
+  // Model selection command (launches after selection)
   program
     .command('model')
-    .description('Interactive model selection and save to config')
+    .description('Interactive model selection and launch Claude Code')
     .option('-v, --verbose', 'Enable verbose logging')
+    .option('-q, --quiet', 'Suppress non-error output')
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
       await app.interactiveModelSelection();
+
+      // After successful model selection, launch Claude Code
+      const config = app.getConfig();
+      if (config.selectedModel || config.selectedThinkingModel) {
+        await app.run({
+          verbose: options.verbose,
+          quiet: options.quiet,
+          model: '' // Will use saved models from config
+        });
+      }
     });
 
   // Thinking model selection command
@@ -136,6 +147,28 @@ export function createProgram(): Command {
     .action(async () => {
       const app = new SyntheticClaudeApp();
       await app.doctor();
+    });
+
+  // Dangerous command - launch Claude Code with --dangerously-skip-permissions
+  program
+    .command('dangerously')
+    .description('Interactive model selection and launch with --dangerously-skip-permissions')
+    .option('-v, --verbose', 'Enable verbose logging')
+    .option('-q, --quiet', 'Suppress non-error output')
+    .action(async (options) => {
+      const app = new SyntheticClaudeApp();
+      await app.interactiveModelSelection();
+
+      // After successful model selection, launch Claude Code with --dangerously-skip-permissions
+      const config = app.getConfig();
+      if (config.selectedModel || config.selectedThinkingModel) {
+        await app.run({
+          verbose: options.verbose,
+          quiet: options.quiet,
+          model: '', // Will use saved models from config
+          additionalArgs: ['--dangerously-skip-permissions']
+        });
+      }
     });
 
   // Cache management

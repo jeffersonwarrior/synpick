@@ -4,20 +4,26 @@ import { ModelInfoImpl } from '../../models';
 
 interface ModelSelectorProps {
   models: ModelInfoImpl[];
-  onSelect: (model: ModelInfoImpl) => void;
+  onSelect: (regularModel: ModelInfoImpl | null, thinkingModel: ModelInfoImpl | null) => void;
   onCancel: () => void;
   searchPlaceholder?: string;
+  initialRegularModel?: ModelInfoImpl | null;
+  initialThinkingModel?: ModelInfoImpl | null;
 }
 
 export const ModelSelector: React.FC<ModelSelectorProps> = ({
   models,
   onSelect,
   onCancel,
-  searchPlaceholder = 'Search models...'
+  searchPlaceholder = 'Search models...',
+  initialRegularModel = null,
+  initialThinkingModel = null
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [filteredModels, setFilteredModels] = useState<ModelInfoImpl[]>(models);
+  const [selectedRegularModel, setSelectedRegularModel] = useState<ModelInfoImpl | null>(initialRegularModel);
+  const [selectedThinkingModel, setSelectedThinkingModel] = useState<ModelInfoImpl | null>(initialThinkingModel);
 
   const { exit } = useApp();
   const { write } = useStdout();
@@ -51,10 +57,26 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 
   // Handle keyboard input
   useInput((input, key) => {
+    // Handle special 't' key for thinking model selection when no search query exists
+    if (input === 't' && !searchQuery && !key.ctrl && !key.meta) {
+      if (filteredModels.length > 0 && selectedIndex < filteredModels.length) {
+        const selectedModel = filteredModels[selectedIndex];
+        if (selectedModel) {
+          // Toggle thinking model selection
+          if (selectedThinkingModel?.id === selectedModel.id) {
+            setSelectedThinkingModel(null);
+          } else {
+            setSelectedThinkingModel(selectedModel);
+          }
+        }
+      }
+      return;
+    }
+
     // Handle text input for search
     if (input && !key.ctrl && !key.meta && !key.return && !key.escape && !key.tab &&
         !key.upArrow && !key.downArrow && !key.leftArrow && !key.rightArrow &&
-        !key.delete && !key.backspace && input !== 'q') {
+        !key.delete && !key.backspace && input !== 'q' && !(input === 't' && !searchQuery)) {
       setSearchQuery(prev => prev + input);
       return;
     }
@@ -71,11 +93,21 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
       return;
     }
 
+    // Space to launch with selections
+    if (input === ' ') {
+      if (selectedRegularModel || selectedThinkingModel) {
+        onSelect(selectedRegularModel, selectedThinkingModel);
+        exit();
+      }
+      return;
+    }
+
+    // Enter to select as regular model and launch
     if (key.return) {
       if (filteredModels.length > 0 && selectedIndex < filteredModels.length) {
         const selectedModel = filteredModels[selectedIndex];
         if (selectedModel) {
-          onSelect(selectedModel);
+          onSelect(selectedModel, selectedThinkingModel);
           exit();
         }
       }
@@ -112,7 +144,15 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   return (
     <Box flexDirection="column">
       <Box marginBottom={1}>
-        <Text color="cyan">Select a Model:</Text>
+        <Text color="cyan">Select Models:</Text>
+      </Box>
+
+      {/* Selection status */}
+      <Box marginBottom={1}>
+        <Text color="gray">
+          Regular: {selectedRegularModel ? selectedRegularModel.getDisplayName() : "none"} |
+          Thinking: {selectedThinkingModel ? selectedThinkingModel.getDisplayName() : "none"}
+        </Text>
       </Box>
 
       <Box marginBottom={1}>
@@ -136,15 +176,29 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 
           {visibleModels.map((model, index) => {
             const actualIndex = visibleStartIndex + index;
+            const isRegularSelected = selectedRegularModel?.id === model.id;
+            const isThinkingSelected = selectedThinkingModel?.id === model.id;
+
+            // Selection indicators
+            const getSelectionIndicator = () => {
+              if (isRegularSelected && isThinkingSelected) return '[R,T] ';
+              if (isRegularSelected) return '[R] ';
+              if (isThinkingSelected) return '[T] ';
+              return '    ';
+            };
+
             return (
               <Box key={model.id} marginBottom={1}>
                 <Box flexDirection="column">
                   <Box>
                     <Text
-                      color={actualIndex === selectedIndex ? 'green' : 'white'}
-                      bold={actualIndex === selectedIndex}
+                      color={actualIndex === selectedIndex ? 'green' :
+                             isRegularSelected ? 'cyan' :
+                             isThinkingSelected ? 'yellow' : 'white'}
+                      bold={actualIndex === selectedIndex || isRegularSelected || isThinkingSelected}
                     >
                       {actualIndex === selectedIndex ? '▸ ' : '  '}
+                      {getSelectionIndicator()}
                       {actualIndex + 1}. {model.getDisplayName()}
                     </Text>
                   </Box>
@@ -153,6 +207,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                       Provider: {model.getProvider()}
                       {(model as any).context_length && ` | Context: ${Math.round((model as any).context_length / 1024)}K`}
                       {(model as any).quantization && ` | ${model.quantization}`}
+                      {model.id.toLowerCase().includes('thinking') && ' | 🤔 Thinking'}
                     </Text>
                   </Box>
                 </Box>
@@ -169,7 +224,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 
           <Box marginTop={1}>
             <Text color="gray">
-              Use ↑↓ to navigate, Enter to select, type to search, q to quit
+              ↑↓ Navigate | Enter: Regular Model + Launch | t: Toggle Thinking Model | Space: Launch | q: Quit
             </Text>
           </Box>
         </>

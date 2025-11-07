@@ -101,7 +101,7 @@ export class UserInterface {
     });
   }
 
-  // Interactive model selection using Ink
+  // Interactive model selection using Ink (single model - for backward compatibility)
   async selectModel(models: ModelInfoImpl[]): Promise<ModelInfoImpl | null> {
     if (models.length === 0) {
       this.error('No models available for selection');
@@ -112,9 +112,15 @@ export class UserInterface {
       const { waitUntilExit } = render(
         <ModelSelector
           models={models}
-          onSelect={model => {
-            this.success(`Selected model: ${model.getDisplayName()}`);
-            resolve(model);
+          onSelect={(regularModel, thinkingModel) => {
+            const selected = regularModel || thinkingModel;
+            if (selected) {
+              this.success(`Selected model: ${selected.getDisplayName()}`);
+              resolve(selected);
+            } else {
+              this.info('No model selected');
+              resolve(null);
+            }
           }}
           onCancel={() => {
             this.info('Model selection cancelled');
@@ -125,6 +131,39 @@ export class UserInterface {
 
       waitUntilExit().catch(() => {
         resolve(null);
+      });
+    });
+  }
+
+  // Interactive dual model selection using Ink
+  async selectDualModels(models: ModelInfoImpl[]): Promise<{regular: ModelInfoImpl | null, thinking: ModelInfoImpl | null}> {
+    if (models.length === 0) {
+      this.error('No models available for selection');
+      return { regular: null, thinking: null };
+    }
+
+    return new Promise(resolve => {
+      const { waitUntilExit } = render(
+        <ModelSelector
+          models={models}
+          onSelect={(regularModel, thinkingModel) => {
+            if (regularModel || thinkingModel) {
+              if (regularModel) this.success(`Regular model: ${regularModel.getDisplayName()}`);
+              if (thinkingModel) this.success(`Thinking model: ${thinkingModel.getDisplayName()}`);
+            } else {
+              this.info('No models selected');
+            }
+            resolve({ regular: regularModel, thinking: thinkingModel });
+          }}
+          onCancel={() => {
+            this.info('Model selection cancelled');
+            resolve({ regular: null, thinking: null });
+          }}
+        />
+      );
+
+      waitUntilExit().catch(() => {
+        resolve({ regular: null, thinking: null });
       });
     });
   }

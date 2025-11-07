@@ -34,6 +34,10 @@ export class SyntheticClaudeApp {
     // Removed verbose startup log
   }
 
+  getConfig() {
+    return this.configManager.config;
+  }
+
   private getModelManager(): ModelManager {
     if (!this.modelManager) {
       const config = this.configManager.config;
@@ -94,15 +98,25 @@ export class SyntheticClaudeApp {
 
       // Sort models for consistent display
       const sortedModels = modelManager.getModels(models);
-      const selectedModel = await this.ui.selectModel(sortedModels);
-      if (!selectedModel) {
+      const { regular: selectedRegularModel, thinking: selectedThinkingModel } = await this.ui.selectDualModels(sortedModels);
+
+      if (!selectedRegularModel && !selectedThinkingModel) {
         this.ui.info('Model selection cancelled');
         return false;
       }
 
-      await this.configManager.setSavedModel(selectedModel.id);
-      this.ui.coloredSuccess(`Model saved: ${selectedModel.getDisplayName()}`);
-      this.ui.highlightInfo('Now run "synclaude" to start Claude Code with this model.', ['synclaude']);
+      // Save models to config
+      if (selectedRegularModel) {
+        await this.configManager.setSavedModel(selectedRegularModel.id);
+        this.ui.coloredSuccess(`Regular model saved: ${selectedRegularModel.getDisplayName()}`);
+      }
+
+      if (selectedThinkingModel) {
+        await this.configManager.setSavedThinkingModel(selectedThinkingModel.id);
+        this.ui.coloredSuccess(`Thinking model saved: ${selectedThinkingModel.getDisplayName()}`);
+      }
+
+      this.ui.highlightInfo('Now run "synclaude" to start Claude Code with your selected model(s).', ['synclaude']);
       return true;
     } catch (error) {
       this.ui.error(`Error during model selection: ${error}`);
