@@ -30,7 +30,7 @@ synclaude is a modern TypeScript/Node.js application that provides a seamless in
 #### Option 1: GitHub Release (Recommended)
 
 ```bash
-npm install -g https://github.com/jeffersonwarrior/synclaude/releases/latest/download/synclaude.tgz
+npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.4.5/synclaude-1.4.5.tgz
 ```
 
 #### Option 2: Download from GitHub Releases
@@ -55,7 +55,10 @@ npm run build
 sudo npm link
 ```
 
-**Important**: Direct git installation (`npm install -g https://github.com/.../synclaude.git`) is not supported due to npm's git installation limitations. Use the release tarball installation instead.
+**Important**:
+- Direct git installation (`npm install -g https://github.com/.../synclaude.git`) is not supported due to npm's git installation limitations
+- Use the specific release tarball: `https://github.com/jeffersonwarrior/synclaude/releases/download/v1.4.5/synclaude-1.4.5.tgz`
+- Or visit [GitHub Releases](https://github.com/jeffersonwarrior/synclaude/releases) for the latest version
 
 ### Uninstallation
 
