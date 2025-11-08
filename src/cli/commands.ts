@@ -156,6 +156,9 @@ export function createProgram(): Command {
   // Dangerous command - launch Claude Code with --dangerously-skip-permissions
   program
     .command('dangerously')
+    .alias('dangerous')
+    .alias('dang')
+    .alias('danger')
     .description('Launch with --dangerously-skip-permissions using last used provider(s)')
     .option('-v, --verbose', 'Enable verbose logging')
     .option('-q, --quiet', 'Suppress non-error output')
