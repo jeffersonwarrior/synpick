@@ -1,0 +1,34 @@
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install git and other necessary tools
+RUN apk add --no-cache git bash curl
+
+# Configure npm for global installations
+RUN npm config set prefix /usr/local
+
+# Create a non-root user for testing
+RUN addgroup -g 1001 -S testuser && \
+    adduser -S testuser -u 1001 -G testuser
+
+# Switch to test user
+USER testuser
+
+# Set the user's home directory and npm prefix
+ENV HOME=/home/testuser
+ENV NPM_CONFIG_PREFIX=/home/testuser/.npm-global
+ENV PATH=/home/testuser/.npm-global/bin:$PATH
+
+# Create npm global directory
+RUN mkdir -p /home/testuser/.npm-global
+
+# Test basic Node.js and npm functionality
+RUN node --version && npm --version
+
+# Set the working directory for tests
+WORKDIR /home/testuser
+
+# Keep the container running for interactive testing
+CMD ["/bin/bash"]
