@@ -3,25 +3,16 @@
 const path = require('path');
 const { createRequire } = require('module');
 
-// Get the package directory
-const packageDir = path.dirname(__dirname);
+// Find the package.json to locate the actual package directory
+let packageDir = __dirname;
+while (packageDir !== '/' && !require('fs').existsSync(path.join(packageDir, 'package.json'))) {
+  packageDir = path.dirname(packageDir);
+}
+
 const mainScript = path.join(packageDir, 'dist', 'cli', 'index.js');
 
 // Create a require function that resolves from the package directory
-const requireFromPackage = createRequire(packageDir);
+const requireFromPackage = createRequire(mainScript);
 
-// Preload required modules by resolving them from the package directory
-try {
-  requireFromPackage('ink');
-  requireFromPackage('commander');
-  requireFromPackage('chalk');
-  requireFromPackage('react');
-  requireFromPackage('axios');
-  requireFromPackage('zod');
-} catch (error) {
-  console.error('Missing dependencies. Please run: npm install');
-  process.exit(1);
-}
-
-// Run the main script
+// Run the main script directly - Node.js will resolve dependencies from the package
 require(mainScript);
