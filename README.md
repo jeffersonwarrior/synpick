@@ -359,6 +359,7 @@ synclaude doctor
 
 ### Development Guidelines
 
+- Review the contributor guide in [AGENTS.md](AGENTS.md) for repository-specific workflows and expectations.
 - Use TypeScript for all new code
 - Follow ESLint and Prettier configurations
 - Write tests for new functionality
