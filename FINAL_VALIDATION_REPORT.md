@@ -19,7 +19,7 @@ This comprehensive validation test confirms that synclaude v1.3.0 installs and o
 
 **Test Case**: Fresh installation in Docker container as regular user
 ```bash
-curl -sSL https://raw.githubusercontent.com/parnexcodes/synclaude/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install.sh | bash
 ```
 
 **Result**: ✅ **SUCCESS**
@@ -172,7 +172,7 @@ require('/home/testuser/.local/share/synclaude/dist/cli/index.js');
 
 Users can now install and use synclaude with a single command:
 ```bash
-curl -sSL https://raw.githubusercontent.com/parnexcodes/synclaude/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install.sh | bash
 ```
 
 ## Recommendations

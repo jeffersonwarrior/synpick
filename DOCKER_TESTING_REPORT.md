@@ -57,7 +57,7 @@ synclaude --version       # 1.4.6
 #### 3. One-Line Installer ✅
 ```bash
 # Installer method works:
-curl -sSL https://raw.githubusercontent.com/parnexcodes/synclaude/main/scripts/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install.sh | bash
 source ~/.bashrc
 synclaude --version       # 1.4.6
 ```
