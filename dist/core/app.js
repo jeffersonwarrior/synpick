@@ -146,25 +146,107 @@ class SyntheticClaudeApp {
         }
     }
     /**
+     * Compare two semver versions
+     * Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+     */
+    compareVersions(v1, v2) {
+        const cleanV1 = v1.replace(/^v/, '');
+        const cleanV2 = v2.replace(/^v/, '');
+        const parts1 = cleanV1.split('.').map(Number);
+        const parts2 = cleanV2.split('.').map(Number);
+        for (let i = 0; i < 3; i++) {
+            const p1 = parts1[i] || 0;
+            const p2 = parts2[i] || 0;
+            if (p1 > p2)
+                return 1;
+            if (p1 < p2)
+                return -1;
+        }
+        return 0;
+    }
+    /**
+     * Get latest synclaude version from GitHub repository
+     */
+    async getLatestGitHubVersion() {
+        const axios = require('axios');
+        const GITHUB_REPO = 'jeffersonwarrior/synclaude';
+        try {
+            // Try GitHub releases API first
+            const response = await axios.get(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
+            return response.data.tag_name?.replace(/^v/, '') || null;
+        }
+        catch {
+            try {
+                // Fallback: fetch package.json from main branch
+                const response = await axios.get(`https://raw.githubusercontent.com/${GITHUB_REPO}/main/package.json`);
+                return response.data.version || null;
+            }
+            catch {
+                return null;
+            }
+        }
+    }
+    /**
      * Update synclaude itself via npm
      */
     async updateSynclaudeSelf(force = false) {
         const { execSync } = require('child_process');
+        const axios = require('axios');
         try {
             // Get current synclaude version
             const currentVersion = execSync('synclaude --version', { encoding: 'utf-8' }).trim();
             this.ui.info(`Current synclaude version: ${currentVersion}`);
             this.ui.info('Checking for synclaude updates...');
-            // Check for latest version from npm
-            const latestVersion = execSync('npm view synclaude version', { encoding: 'utf-8' }).trim();
-            this.ui.info(`Latest synclaude version: ${latestVersion}`);
-            if (currentVersion === latestVersion && !force) {
-                this.ui.info('Synclaude is already up to date');
+            // Check for latest version from GitHub repository
+            const latestVersion = await this.getLatestGitHubVersion();
+            if (!latestVersion) {
+                this.ui.info('Could not check for updates from GitHub. Using npm registry as fallback...');
+                // Fallback to npm registry
+                try {
+                    const npmVersion = execSync('npm view synclaude version', { encoding: 'utf-8' }).trim();
+                    this.ui.info(`Latest synclaude version on npm: ${npmVersion}`);
+                }
+                catch {
+                    this.ui.info('Could not check npm registry either');
+                }
+                this.ui.info('Run the installer manually to update:');
+                this.ui.info('  curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install.sh | bash');
                 return;
             }
-            // Update synclaude via npm
-            this.ui.info('Updating synclaude...');
-            execSync('npm update -g synclaude', { stdio: 'pipe' });
+            this.ui.info(`Latest synclaude version: ${latestVersion}`);
+            // Compare versions - only update if latest is newer
+            const comparison = this.compareVersions(latestVersion, currentVersion);
+            if (comparison <= 0 && !force) {
+                if (comparison === 0) {
+                    this.ui.info('Synclaude is already up to date');
+                }
+                else {
+                    this.ui.info(`Current version (${currentVersion}) is newer than available (${latestVersion})`);
+                }
+                return;
+            }
+            // Update synclaude via the install script
+            this.ui.info('Updating synclaude from GitHub...');
+            try {
+                // Download and run the installer from GitHub
+                execSync(`curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install.sh | bash`, { stdio: 'pipe' });
+            }
+            catch {
+                this.ui.info('Remote installer failed, trying npm install...');
+                // Fallback: try npm install from GitHub
+                // Note: we can't direct install from GitHub due to npm limitations,
+                // but we can try to update if the user has npm access
+                try {
+                    execSync('npm install -g synclaude@latest', { stdio: 'pipe' });
+                }
+                catch {
+                    // Final fallback - show manual instructions
+                    this.ui.info('Automatic update failed');
+                    this.ui.info('Please update manually:');
+                    this.ui.info('  curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install.sh | bash');
+                    throw new Error('Automatic update unavailable');
+                }
+            }
             // Verify the update
             const newVersion = execSync('synclaude --version', { encoding: 'utf-8' }).trim();
             if (newVersion === latestVersion || force) {
@@ -177,6 +259,8 @@ class SyntheticClaudeApp {
         }
         catch (error) {
             this.ui.error(`Failed to update synclaude: ${error instanceof Error ? error.message : String(error)}`);
+            this.ui.info('Try manual installation:');
+            this.ui.info('  curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install.sh | bash');
             // Don't exit - continue to try updating Claude Code
         }
     }

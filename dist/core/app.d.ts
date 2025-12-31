@@ -39,6 +39,15 @@ export declare class SyntheticClaudeApp {
      */
     updateClaudeCode(force?: boolean): Promise<void>;
     /**
+     * Compare two semver versions
+     * Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+     */
+    private compareVersions;
+    /**
+     * Get latest synclaude version from GitHub repository
+     */
+    private getLatestGitHubVersion;
+    /**
      * Update synclaude itself via npm
      */
     private updateSynclaudeSelf;
