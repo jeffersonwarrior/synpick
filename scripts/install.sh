@@ -156,15 +156,15 @@ cleanup_old_installations() {
     fi
 
     # Remove from common local bin directories
-    for BIN_DIR in \
+    for BIN_DIR_TO_CLEAN in \
         "$HOME/.local/bin/synclaude" \
         "$HOME/.npm-local/bin/synclaude" \
         "/usr/local/bin/synclaude" \
         "/usr/bin/synclaude"
     do
-        if [ -e "$BIN_DIR" ]; then
-            info "Removing from bin dir: $BIN_DIR"
-            rm -f "$BIN_DIR" 2>/dev/null || sudo rm -f "$BIN_DIR" 2>/dev/null || true
+        if [ -e "$BIN_DIR_TO_CLEAN" ]; then
+            info "Removing from bin dir: $BIN_DIR_TO_CLEAN"
+            rm -f "$BIN_DIR_TO_CLEAN" 2>/dev/null || sudo rm -f "$BIN_DIR_TO_CLEAN" 2>/dev/null || true
             found_old=1
         fi
     done
@@ -193,6 +193,37 @@ cleanup_old_installations() {
     fi
 
     return 0
+}
+
+# Add PATH entry to shell config
+add_path_entry() {
+    local config_file="$1"
+    local bin_dir="$2"
+    local shell_type="$3"
+
+    # Remove old entries first
+    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$config_file" 2>/dev/null || true
+
+    # Add newline if file doesn't end with one
+    if [ -s "$config_file" ] && [ "$(tail -c 1 "$config_file" | wc -l)" -eq 0 ]; then
+        echo "" >> "$config_file"
+    fi
+
+    # Add PATH entry with proper shell syntax
+    case "$shell_type" in
+        fish)
+            echo "" >> "$config_file"
+            echo "# Synclaude PATH configuration" >> "$config_file"
+            echo "set -gx PATH $bin_dir \$PATH" >> "$config_file"
+            echo "# End Synclaude PATH configuration" >> "$config_file"
+            ;;
+        *)
+            echo "" >> "$config_file"
+            echo "# Synclaude PATH configuration" >> "$config_file"
+            echo "export PATH=\"$bin_dir:\$PATH\"" >> "$config_file"
+            echo "# End Synclaude PATH configuration" >> "$config_file"
+            ;;
+    esac
 }
 
 # Install synclaude package
@@ -382,56 +413,24 @@ update_path() {
             SHELL_NAME=$(basename "$SHELL")
             case "$SHELL_NAME" in
                 bash)
-                    local BASHRC="$HOME/.bashrc"
-                    if [ -f "$BASHRC" ]; then
-                        # Remove old synclaude PATH entries first
-                        sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$BASHRC" 2>/dev/null || true
-                        # Add new PATH entry with clear markers
-                        cat >> "$BASHRC" << 'EOF'
-
-# Synclaude PATH configuration
-export PATH="/home/agent/.npm-local/bin:$PATH"
-# End Synclaude PATH configuration
-EOF
-                        # Fix the hardcoded path to use actual npm bin dir
-                        sed -i "s|=\"/home/agent/.npm-local/bin:\$PATH\"|=\"$NPM_BIN_DIR:\$PATH\"|" "$BASHRC"
-                        SHELL_CONFIG="$BASHRC"
+                    if [ -f "$HOME/.bashrc" ]; then
+                        add_path_entry "$HOME/.bashrc" "$NPM_BIN_DIR" "bash"
+                        SHELL_CONFIG="$HOME/.bashrc"
                     elif [ -f "$HOME/.bash_profile" ]; then
-                        local BASH_PROFILE="$HOME/.bash_profile"
-                        sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$BASH_PROFILE" 2>/dev/null || true
-                        cat >> "$BASH_PROFILE" << 'EOF'
-
-# Synclaude PATH configuration
-export PATH="/home/agent/.npm-local/bin:$PATH"
-# End Synclaude PATH configuration
-EOF
-                        sed -i "s|=\"/home/agent/.npm-local/bin:\$PATH\"|=\"$NPM_BIN_DIR:\$PATH\"|" "$BASH_PROFILE"
-                        SHELL_CONFIG="$BASH_PROFILE"
+                        add_path_entry "$HOME/.bash_profile" "$NPM_BIN_DIR" "bash"
+                        SHELL_CONFIG="$HOME/.bash_profile"
                     fi
                     ;;
                 zsh)
-                    local ZSHRC="$HOME/.zshrc"
-                    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$ZSHRC" 2>/dev/null || true
-                    cat >> "$ZSHRC" << 'EOF'
-
-# Synclaude PATH configuration
-export PATH="/home/agent/.npm-local/bin:$PATH"
-# End Synclaude PATH configuration
-EOF
-                    sed -i "s|=\"/home/agent/.npm-local/bin:\$PATH\"|=\"$NPM_BIN_DIR:\$PATH\"|" "$ZSHRC"
-                    SHELL_CONFIG="$ZSHRC"
+                    if [ -f "$HOME/.zshrc" ]; then
+                        add_path_entry "$HOME/.zshrc" "$NPM_BIN_DIR" "zsh"
+                        SHELL_CONFIG="$HOME/.zshrc"
+                    fi
                     ;;
                 fish)
                     local FISH_CONFIG="$HOME/.config/fish/config.fish"
                     mkdir -p "$(dirname "$FISH_CONFIG")" 2>/dev/null || true
-                    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$FISH_CONFIG" 2>/dev/null || true
-                    cat >> "$FISH_CONFIG" << 'EOF'
-
-# Synclaude PATH configuration
-set -gx PATH /home/agent/.npm-local/bin $PATH
-# End Synclaude PATH configuration
-EOF
-                    sed -i "s|/home/agent/.npm-local/bin|$NPM_BIN_DIR|" "$FISH_CONFIG"
+                    add_path_entry "$FISH_CONFIG" "$NPM_BIN_DIR" "fish"
                     SHELL_CONFIG="$FISH_CONFIG"
                     ;;
                 *)
@@ -456,53 +455,24 @@ EOF
             SHELL_NAME=$(basename "$SHELL")
             case "$SHELL_NAME" in
                 bash)
-                    local BASHRC="$HOME/.bashrc"
-                    if [ -f "$BASHRC" ]; then
-                        sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$BASHRC" 2>/dev/null || true
-                        cat >> "$BASHRC" << 'EOF'
-
-# Synclaude PATH configuration
-export PATH="/home/agent/.local/bin:$PATH"
-# End Synclaude PATH configuration
-EOF
-                        sed -i "s|=\"/home/agent/.local/bin:\$PATH\"|=\"$BIN_DIR:\$PATH\"|" "$BASHRC"
-                        SHELL_CONFIG="$BASHRC"
+                    if [ -f "$HOME/.bashrc" ]; then
+                        add_path_entry "$HOME/.bashrc" "$BIN_DIR" "bash"
+                        SHELL_CONFIG="$HOME/.bashrc"
                     elif [ -f "$HOME/.bash_profile" ]; then
-                        local BASH_PROFILE="$HOME/.bash_profile"
-                        sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$BASH_PROFILE" 2>/dev/null || true
-                        cat >> "$BASH_PROFILE" << 'EOF'
-
-# Synclaude PATH configuration
-export PATH="/home/agent/.local/bin:$PATH"
-# End Synclaude PATH configuration
-EOF
-                        sed -i "s|=\"/home/agent/.local/bin:\$PATH\"|=\"$BIN_DIR:\$PATH\"|" "$BASH_PROFILE"
-                        SHELL_CONFIG="$BASH_PROFILE"
+                        add_path_entry "$HOME/.bash_profile" "$BIN_DIR" "bash"
+                        SHELL_CONFIG="$HOME/.bash_profile"
                     fi
                     ;;
                 zsh)
-                    local ZSHRC="$HOME/.zshrc"
-                    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$ZSHRC" 2>/dev/null || true
-                    cat >> "$ZSHRC" << 'EOF'
-
-# Synclaude PATH configuration
-export PATH="/home/agent/.local/bin:$PATH"
-# End Synclaude PATH configuration
-EOF
-                    sed -i "s|=\"/home/agent/.local/bin:\$PATH\"|=\"$BIN_DIR:\$PATH\"|" "$ZSHRC"
-                    SHELL_CONFIG="$ZSHRC"
+                    if [ -f "$HOME/.zshrc" ]; then
+                        add_path_entry "$HOME/.zshrc" "$BIN_DIR" "zsh"
+                        SHELL_CONFIG="$HOME/.zshrc"
+                    fi
                     ;;
                 fish)
                     local FISH_CONFIG="$HOME/.config/fish/config.fish"
                     mkdir -p "$(dirname "$FISH_CONFIG")" 2>/dev/null || true
-                    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$FISH_CONFIG" 2>/dev/null || true
-                    cat >> "$FISH_CONFIG" << 'EOF'
-
-# Synclaude PATH configuration
-set -gx PATH /home/agent/.local/bin $PATH
-# End Synclaude PATH configuration
-EOF
-                    sed -i "s|/home/agent/.local/bin|$BIN_DIR|" "$FISH_CONFIG"
+                    add_path_entry "$FISH_CONFIG" "$BIN_DIR" "fish"
                     SHELL_CONFIG="$FISH_CONFIG"
                     ;;
                 *)
