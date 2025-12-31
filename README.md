@@ -66,14 +66,19 @@ curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scri
 curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install-macos.sh | bash
 ```
 
-#### Option 5: Local Development Install
+#### Option 5: Clone and Install
 
 ```bash
 git clone https://github.com/jeffersonwarrior/synclaude.git
 cd synclaude
-npm install
-npm run build
-sudo npm link
+./scripts/install.sh
+```
+
+You can also use the macOS-specific installer:
+```bash
+git clone https://github.com/jeffersonwarrior/synclaude.git
+cd synclaude
+./scripts/install-macos.sh
 ```
 
 **Important**:
@@ -292,8 +297,6 @@ synclaude/
 │   └── utils/         # Shared utilities
 ├── tests/             # Jest tests
 ├── scripts/           # Installation and utility scripts
-└── dist/              # Built TypeScript output
-```
 
 ## API Integration
 
@@ -385,7 +388,6 @@ synclaude doctor
 
 ### Development Guidelines
 
-- Review the contributor guide in [AGENTS.md](AGENTS.md) for repository-specific workflows and expectations.
 - Use TypeScript for all new code
 - Follow ESLint and Prettier configurations
 - Write tests for new functionality
