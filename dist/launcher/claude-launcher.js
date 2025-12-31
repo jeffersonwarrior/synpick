@@ -6,6 +6,8 @@ import { spawn } from 'child_process';
  * check installation status, and retrieve version information.
  */
 export class ClaudeLauncher {
+    claudePath;
+    timeoutMs;
     /**
      * Creates a new ClaudeLauncher instance
      *

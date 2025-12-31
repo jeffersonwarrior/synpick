@@ -1,7 +1,12 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { URL, fileURLToPath } from 'url';
 import { ConfigManager } from '../config';
 import chalk from 'chalk';
+
+// ESM polyfill for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = join(__filename, '..');
 
 interface BannerOptions {
   verbose?: boolean;

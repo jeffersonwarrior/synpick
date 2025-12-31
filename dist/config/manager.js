@@ -1,8 +1,13 @@
 import { readFile, writeFile, mkdir, chmod, unlink, readdir, stat } from 'fs/promises';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { AppConfigSchema, ConfigValidationError, ConfigSaveError } from './types.js';
 export class ConfigManager {
+    configDir;
+    configPath;
+    _config = null;
+    static MAX_BACKUP_FILES = 1;
     /**
      * Creates a new ConfigManager instance
      *
@@ -10,7 +15,6 @@ export class ConfigManager {
      *                    Defaults to ~/.config/synclaude
      */
     constructor(configDir) {
-        this._config = null;
         this.configDir = configDir || join(homedir(), '.config', 'synclaude');
         this.configPath = join(this.configDir, 'config.json');
     }
@@ -30,13 +34,11 @@ export class ConfigManager {
     }
     loadConfig() {
         try {
-            // Use fs.readFileSync instead of require to avoid module loading errors
-            const fs = require('fs');
-            if (!fs.existsSync(this.configPath)) {
+            if (!existsSync(this.configPath)) {
                 // Config file doesn't exist, return defaults
                 return AppConfigSchema.parse({});
             }
-            const configData = JSON.parse(fs.readFileSync(this.configPath, 'utf-8'));
+            const configData = JSON.parse(readFileSync(this.configPath, 'utf-8'));
             const result = AppConfigSchema.safeParse(configData);
             if (!result.success) {
                 // Try to preserve firstRunCompleted flag even if other config is invalid
@@ -53,10 +55,9 @@ export class ConfigManager {
         }
         catch {
             // Try to recover firstRunCompleted from partial config data
-            const fs = require('fs');
-            if (fs.existsSync(this.configPath)) {
+            if (existsSync(this.configPath)) {
                 try {
-                    const partialConfig = JSON.parse(fs.readFileSync(this.configPath, 'utf-8'));
+                    const partialConfig = JSON.parse(readFileSync(this.configPath, 'utf-8'));
                     if (partialConfig.firstRunCompleted === true) {
                         return AppConfigSchema.parse({ firstRunCompleted: true });
                     }
@@ -89,8 +90,7 @@ export class ConfigManager {
             await this.cleanupOldBackups();
             // Create backup of existing config
             try {
-                const fsSync = require('fs');
-                if (fsSync.existsSync(this.configPath)) {
+                if (existsSync(this.configPath)) {
                     const backupPath = `${this.configPath}.backup`;
                     const existingData = await readFile(this.configPath, 'utf-8');
                     await writeFile(backupPath, existingData, 'utf-8');
@@ -107,8 +107,7 @@ export class ConfigManager {
             try {
                 await chmod(this.configPath, 0o600);
                 const backupPath = `${this.configPath}.backup`;
-                const fsSync = require('fs');
-                if (fsSync.existsSync(backupPath)) {
+                if (existsSync(backupPath)) {
                     await chmod(backupPath, 0o600);
                 }
             }
@@ -224,7 +223,6 @@ export class ConfigManager {
      */
     async isCacheValid(cacheFile) {
         try {
-            const { stat } = require('fs/promises');
             const stats = await stat(cacheFile);
             const cacheAge = Date.now() - stats.mtime.getTime();
             const maxAge = this.config.cacheDurationHours * 60 * 60 * 1000;
@@ -342,5 +340,4 @@ export class ConfigManager {
         }
     }
 }
-ConfigManager.MAX_BACKUP_FILES = 1;
 //# sourceMappingURL=manager.js.map

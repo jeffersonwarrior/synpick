@@ -104,14 +104,6 @@ export async function checkCleanStaleSymlinks(options: { verbose?: boolean } = {
   return { cleaned, failed };
 }
 
-export interface PathUpdateResult {
-  success: boolean;
-  pathAdded: boolean;
-  configFiles: string[];
-  needsReload: boolean;
-  error?: string;
-}
-
 /**
  * Detects the best installation method for the current environment
  */

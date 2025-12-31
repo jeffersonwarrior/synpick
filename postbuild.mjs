@@ -29,8 +29,6 @@ async function resolveImportToJsExtension(importPath, currentFileDir) {
   let fullPath = path.resolve(currentFileDir, withJsExt);
   let exists = await fileExists(fullPath);
 
-  console.log(`  Checking: ${importPath} + .js -> ${fullPath} exists: ${exists}`);
-
   if (exists) {
     return withJsExt;
   }
@@ -39,8 +37,6 @@ async function resolveImportToJsExtension(importPath, currentFileDir) {
   let indexPath = path.join(importPath, 'index.js');
   let fullIndexPath = path.resolve(currentFileDir, indexPath);
   exists = await fileExists(fullIndexPath);
-
-  console.log(`  Checking: ${importPath}/index.js -> ${fullIndexPath} exists: ${exists}`);
 
   if (exists) {
     return indexPath;
@@ -54,8 +50,6 @@ async function processFile(filePath) {
   let content = await fs.readFile(filePath, 'utf-8');
   const fileDir = path.dirname(filePath);
   const processedImports = new Set();
-
-  console.log(`Processing: ${filePath} (dir: ${fileDir})`);
 
   // Process static imports
   const importRegex = /from\s+['"](\.{1,2}\/[^'"\s]+)['"]/g;
@@ -76,10 +70,7 @@ async function processFile(filePath) {
     }
     processedImports.add(importPath);
 
-    console.log(`  Found import: ${importPath}`);
     const resolved = await resolveImportToJsExtension(importPath, fileDir);
-    console.log(`  Resolved to: ${resolved}`);
-
     importReplacements.push({ from: fullMatch, to: `from '${resolved}'` });
   }
 

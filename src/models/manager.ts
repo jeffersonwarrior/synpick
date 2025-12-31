@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { ApiModelsResponse, ApiError } from './types';
+import { ApiModelsResponse, ApiError, CacheInfo } from './types';
 import { ModelInfoImpl } from './info';
 import { ModelCache } from './cache';
 
@@ -206,7 +206,7 @@ export class ModelManager {
    *
    * @returns Promise resolving to cache info object with details like age, size, etc.
    */
-  async getCacheInfo(): Promise<Record<string, any>> {
+  async getCacheInfo(): Promise<CacheInfo> {
     return this.cache.getInfo();
   }
 }

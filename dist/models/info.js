@@ -1,6 +1,25 @@
+import { ModelInfoSchema } from './types.js';
 export class ModelInfoImpl {
+    id;
+    object;
+    created;
+    owned_by;
+    provider;
+    always_on;
+    hugging_face_id;
+    name;
+    input_modalities;
+    output_modalities;
+    context_length;
+    max_output_length;
+    pricing;
+    quantization;
+    supported_sampling_parameters;
+    supported_features;
+    openrouter;
+    datacenters;
     constructor(data) {
-        const result = require('./types').ModelInfoSchema.safeParse(data);
+        const result = ModelInfoSchema.safeParse(data);
         if (!result.success) {
             throw new Error(`Invalid model data: ${result.error.message}`);
         }

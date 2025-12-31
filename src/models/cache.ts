@@ -1,5 +1,6 @@
 import { readFile, writeFile, mkdir, stat, unlink } from 'fs/promises';
-import { CacheInfo } from './types';
+import { dirname } from 'path';
+import { CacheInfo, ModelInfo } from './types';
 import { ModelInfoImpl } from './info';
 
 export interface ModelCacheOptions {
@@ -40,7 +41,7 @@ export class ModelCache {
       const cacheData = JSON.parse(data);
 
       const modelsData = cacheData.models || [];
-      return modelsData.map((modelData: any) => new ModelInfoImpl(modelData));
+      return modelsData.map((modelData: ModelInfo) => new ModelInfoImpl(modelData));
     } catch (error) {
       console.error('Error loading cache:', error);
       return [];
@@ -50,7 +51,7 @@ export class ModelCache {
   async save(models: ModelInfoImpl[]): Promise<boolean> {
     try {
       // Ensure parent directory exists
-      const parentDir = require('path').dirname(this.cacheFile);
+      const parentDir = dirname(this.cacheFile);
       await mkdir(parentDir, { recursive: true });
 
       const cacheData = {

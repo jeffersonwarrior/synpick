@@ -11,10 +11,10 @@ export declare class Logger {
     constructor(options: LoggerOptions);
     private shouldLog;
     private formatMessage;
-    debug(message: string, ...args: any[]): void;
-    info(message: string, ...args: any[]): void;
-    warn(message: string, ...args: any[]): void;
-    error(message: string, ...args: any[]): void;
+    debug(message: string, ...args: unknown[]): void;
+    info(message: string, ...args: unknown[]): void;
+    warn(message: string, ...args: unknown[]): void;
+    error(message: string, ...args: unknown[]): void;
     setLevel(level: LogLevel): void;
     setVerbose(verbose: boolean): void;
     setQuiet(quiet: boolean): void;
@@ -23,10 +23,10 @@ export declare function setupLogging(verbose?: boolean, quiet?: boolean): void;
 export declare function getLogger(): Logger;
 export declare const logger: Logger;
 export declare const log: {
-    debug: (message: string, ...args: any[]) => void;
-    info: (message: string, ...args: any[]) => void;
-    warn: (message: string, ...args: any[]) => void;
-    error: (message: string, ...args: any[]) => void;
+    debug: (message: string, ...args: unknown[]) => void;
+    info: (message: string, ...args: unknown[]) => void;
+    warn: (message: string, ...args: unknown[]) => void;
+    error: (message: string, ...args: unknown[]) => void;
 };
 export {};
 //# sourceMappingURL=logger.d.ts.map

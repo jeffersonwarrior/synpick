@@ -1,32 +1,11 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import { render } from 'ink';
 import chalk from 'chalk';
+import { createInterface } from 'readline';
 import { ModelSelector } from './components/ModelSelector.js';
 import { StatusMessage } from './components/StatusMessage.js';
 import { BYTES_PER_KB, PERCENTAGE_MAX, DEFAULT_PROGRESS_BAR_LENGTH } from '../utils/constants.js';
-// Helper function to identify thinking-capable models
-function isThinkingModel(modelId) {
-    const id = modelId.toLowerCase();
-    // Direct "thinking" keyword
-    if (id.includes('thinking'))
-        return true;
-    // Known thinking model patterns
-    if (id.includes('minimax') && (id.includes('2') || id.includes('3')))
-        return true;
-    if (id.includes('deepseek-r1') || id.includes('deepseek-r2') || id.includes('deepseek-r3'))
-        return true;
-    if (id.includes('deepseek') && (id.includes('3.2') || id.includes('3-2')))
-        return true;
-    if (id.includes('qwq'))
-        return true;
-    if (id.includes('o1'))
-        return true; // OpenAI o1 series
-    if (id.includes('o3'))
-        return true; // OpenAI o3 series
-    if (id.includes('qwen3'))
-        return true; // Qwen 3 thinking variants
-    return false;
-}
+import { isThinkingModel } from '../utils/index.js';
 /**
  * UserInterface handles all user interaction for the synclaude CLI
  *
@@ -34,6 +13,8 @@ function isThinkingModel(modelId) {
  * user input collection, and interactive model selection.
  */
 export class UserInterface {
+    verbose;
+    quiet;
     /**
      * Creates a new UserInterface instance
      *
@@ -162,11 +143,11 @@ export class UserInterface {
             const thoughtsuffix = isThinkingModel(model.id) ? ' ' + chalk.yellow('🤔 Thinking') : '';
             console.log(`${marker} ${index + 1}. ${chalk.cyan(displayName)}${thoughtsuffix}`);
             console.log(`    ${chalk.gray('Provider:')} ${model.getProvider()}`);
-            if (model.context_length) {
+            if ('context_length' in model && typeof model.context_length === 'number') {
                 const contextK = Math.round(model.context_length / BYTES_PER_KB);
                 console.log(`    ${chalk.gray('Context:')} ${contextK}K tokens`);
             }
-            if (model.quantization) {
+            if ('quantization' in model && model.quantization) {
                 console.log(`    ${chalk.gray('Quantization:')} ${model.quantization}`);
             }
             console.log(`    ${chalk.gray('ID:')} ${model.id}`);
@@ -269,7 +250,7 @@ export class UserInterface {
      */
     async askQuestion(question, defaultValue) {
         return new Promise(resolve => {
-            const rl = require('readline').createInterface({
+            const rl = createInterface({
                 input: process.stdin,
                 output: process.stdout,
             });

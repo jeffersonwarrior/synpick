@@ -1,4 +1,7 @@
 export class Logger {
+    level;
+    verbose;
+    quiet;
     constructor(options) {
         this.level = options.level;
         this.verbose = options.verbose || false;

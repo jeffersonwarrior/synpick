@@ -45,13 +45,6 @@ export declare function checkCleanStaleSymlinks(options?: {
     cleaned: string[];
     failed: string[];
 }>;
-export interface PathUpdateResult {
-    success: boolean;
-    pathAdded: boolean;
-    configFiles: string[];
-    needsReload: boolean;
-    error?: string;
-}
 /**
  * Detects the best installation method for the current environment
  */

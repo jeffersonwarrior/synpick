@@ -26,28 +26,28 @@ export declare class UserInterface {
      * @param message - The message to display
      * @param args - Additional arguments to log
      */
-    info(message: string, ...args: any[]): void;
+    info(message: string, ...args: unknown[]): void;
     /**
      * Displays a success message
      *
      * @param message - The message to display
      * @param args - Additional arguments to log
      */
-    success(message: string, ...args: any[]): void;
+    success(message: string, ...args: unknown[]): void;
     /**
      * Displays a colored success message for important notifications
      *
      * @param message - The message to display
      * @param args - Additional arguments to log
      */
-    coloredSuccess(message: string, ...args: any[]): void;
+    coloredSuccess(message: string, ...args: unknown[]): void;
     /**
      * Displays a colored info message for important notifications
      *
      * @param message - The message to display
      * @param args - Additional arguments to log
      */
-    coloredInfo(message: string, ...args: any[]): void;
+    coloredInfo(message: string, ...args: unknown[]): void;
     /**
      * Displays a message with highlighted text
      *
@@ -61,7 +61,7 @@ export declare class UserInterface {
      * @param message - The message to display
      * @param args - Additional arguments to log
      */
-    warning(message: string, ...args: any[]): void;
+    warning(message: string, ...args: unknown[]): void;
     /**
      * Displays an error message
      *
@@ -70,7 +70,7 @@ export declare class UserInterface {
      * @param message - The message to display
      * @param args - Additional arguments to log
      */
-    error(message: string, ...args: any[]): void;
+    error(message: string, ...args: unknown[]): void;
     /**
      * Displays a debug message
      *
@@ -79,7 +79,7 @@ export declare class UserInterface {
      * @param message - The message to display
      * @param args - Additional arguments to log
      */
-    debug(message: string, ...args: any[]): void;
+    debug(message: string, ...args: unknown[]): void;
     /**
      * Displays a simple list of models
      *

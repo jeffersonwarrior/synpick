@@ -120,19 +120,24 @@ describe('Timeout Configuration', () => {
     it('should use timeout from options in checkClaudeInstallation', async () => {
       const launcher = new ClaudeLauncher('claude');
 
+      let spawnCallback: (() => void) | null = null;
       const mockChild = {
         on: jest.fn((event: string, callback: any) => {
           if (event === 'spawn') {
-            // Simulate immediate spawn
-            setTimeout(() => callback(), 10);
+            spawnCallback = callback;
           }
         }),
       };
 
+      jest.useFakeTimers();
       (spawn as jest.Mock).mockReturnValue(mockChild);
 
-      jest.useFakeTimers();
       const promise = launcher.checkClaudeInstallation();
+
+      // Trigger spawn callback using fake timers
+      if (spawnCallback) {
+        Promise.resolve().then(() => spawnCallback!());
+      }
 
       // Fast-forward less than 5 seconds
       jest.advanceTimersByTime(4000);

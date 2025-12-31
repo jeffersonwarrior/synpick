@@ -8,23 +8,7 @@ import {
   UI_INDENT_SPACES,
   UI_MARGIN_BOTTOM,
 } from '../../utils/constants';
-
-// Helper function to identify thinking-capable models
-function isThinkingModel(modelId: string): boolean {
-  const id = modelId.toLowerCase();
-  // Direct "thinking" keyword
-  if (id.includes('thinking')) return true;
-  // Known thinking model patterns
-  if (id.includes('minimax') && (id.includes('2') || id.includes('3'))) return true;
-  if (id.includes('deepseek-r1') || id.includes('deepseek-r2') || id.includes('deepseek-r3'))
-    return true;
-  if (id.includes('deepseek') && (id.includes('3.2') || id.includes('3-2'))) return true;
-  if (id.includes('qwq')) return true;
-  if (id.includes('o1')) return true; // OpenAI o1 series
-  if (id.includes('o3')) return true; // OpenAI o3 series
-  if (id.includes('qwen3')) return true; // Qwen 3 thinking variants
-  return false;
-}
+import { isThinkingModel } from '../../utils';
 
 interface ModelSelectorProps {
   models: ModelInfoImpl[];
@@ -251,9 +235,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                   <Box marginLeft={UI_INDENT_SPACES}>
                     <Text color="gray">
                       Provider: {model.getProvider()}
-                      {(model as any).context_length &&
-                        ` | Context: ${Math.round((model as any).context_length / BYTES_PER_KB)}K`}
-                      {(model as any).quantization && ` | ${model.quantization}`}
+                      {'context_length' in model &&
+                        typeof model.context_length === 'number' &&
+                        ` | Context: ${Math.round(model.context_length / BYTES_PER_KB)}K`}
+                      {'quantization' in model && model.quantization && ` | ${model.quantization}`}
                       {isThinkingModel(model.id) && ' | 🤔 Thinking'}
                     </Text>
                   </Box>

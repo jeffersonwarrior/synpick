@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2025-12-31
+
+### Added
+- Added comprehensive `USAGE.md` documentation with quick start guide, model selection, configuration, system tools, and troubleshooting
+- Added centralized version management via `version.txt` (CLI and install script now read from this single source of truth)
+- Added `isThinkingModel()` utility function to shared `src/utils/model-utils.ts`
+
+### Fixed
+- Fixed install.sh hardcoded paths - now uses shell variables instead of fixed `/home/agent/` paths
+- Fixed install.sh fish shell syntax handling in PATH entries
+- Fixed install.sh variable name collision in cleanup function
+- Fixed Jest configuration for ESM compatibility (renamed `jest.config.js` to `jest.config.cjs`)
+- Fixed Jest timeout handler issues with `forceExit` configuration
+- Fixed syntax error in `scripts/build.sh` (removed extra quote)
+- Fixed mixed `require()` usage in `src/config/manager.ts` for ESM compatibility
+- Fixed duplicate `PathUpdateResult` interface in `src/install/install.ts`
+- Removed real `setTimeout` calls from test files to prevent timer leaks
+
+### Changed
+- Removed dual ESLint configuration (kept modern `eslint.config.js`, removed legacy `.eslintrc.js`)
+- Added `USAGE.md` and `version.txt` to npm package files array
+- Updated README.md version references to 1.6.1
+
 ## [1.6.0] - 2025-12-31
 
 ### Added

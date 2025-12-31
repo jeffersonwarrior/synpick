@@ -2,7 +2,8 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { execSync } from 'child_process';
 import axios from 'axios';
-import { ConfigManager } from '../config';
+import { ConfigManager, AppConfigSchema } from '../config';
+import type { AppConfig } from '../config';
 import { ModelManager } from '../models';
 import { UserInterface } from '../ui';
 import { ClaudeLauncher, LaunchOptions } from '../launcher';
@@ -583,7 +584,7 @@ export class SyntheticClaudeApp {
    */
   async setConfig(key: string, value: string): Promise<void> {
     // Simple key-value config setting
-    const updates: Record<string, any> = {};
+    const updates: Partial<AppConfig> = {};
 
     switch (key) {
       case 'apiKey':
@@ -641,7 +642,7 @@ export class SyntheticClaudeApp {
     }
 
     // Clear config
-    await this.configManager.saveConfig(require('../config').AppConfigSchema.parse({}));
+    await this.configManager.saveConfig(AppConfigSchema.parse({}));
     this.ui.success('Configuration reset to defaults');
   }
 

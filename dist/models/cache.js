@@ -1,6 +1,9 @@
 import { readFile, writeFile, mkdir, stat, unlink } from 'fs/promises';
+import { dirname } from 'path';
 import { ModelInfoImpl } from './info.js';
 export class ModelCache {
+    cacheFile;
+    cacheDurationMs;
     constructor(options) {
         this.cacheFile = options.cacheFile;
         this.cacheDurationMs = options.cacheDurationHours * 60 * 60 * 1000;
@@ -36,7 +39,7 @@ export class ModelCache {
     async save(models) {
         try {
             // Ensure parent directory exists
-            const parentDir = require('path').dirname(this.cacheFile);
+            const parentDir = dirname(this.cacheFile);
             await mkdir(parentDir, { recursive: true });
             const cacheData = {
                 models: models.map(model => model.toJSON()),

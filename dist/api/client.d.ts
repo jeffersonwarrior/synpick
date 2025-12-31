@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosResponse } from 'axios';
+import { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { ApiModelsResponse } from '../models/types';
 export interface ApiClientOptions {
     baseURL?: string;
@@ -39,7 +39,7 @@ export declare class ApiClient {
      * @returns Promise with the Axios response
      * @throws ApiError if the request fails
      */
-    get<T = any>(url: string, config?: any): Promise<AxiosResponse<T>>;
+    get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
     /**
      * Performs an HTTP POST request
      *
@@ -50,7 +50,7 @@ export declare class ApiClient {
      * @returns Promise with the Axios response
      * @throws ApiError if the request fails
      */
-    post<T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>>;
+    post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
     /**
      * Performs an HTTP PUT request
      *
@@ -61,7 +61,7 @@ export declare class ApiClient {
      * @returns Promise with the Axios response
      * @throws ApiError if the request fails
      */
-    put<T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>>;
+    put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
     /**
      * Performs an HTTP DELETE request
      *
@@ -71,7 +71,7 @@ export declare class ApiClient {
      * @returns Promise with the Axios response
      * @throws ApiError if the request fails
      */
-    delete<T = any>(url: string, config?: any): Promise<AxiosResponse<T>>;
+    delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>>;
     fetchModels(apiKey: string, modelsUrl: string): Promise<ApiModelsResponse>;
     private handleError;
     /**

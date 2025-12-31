@@ -1,3 +1,4 @@
+import { CacheInfo } from './types';
 import { ModelInfoImpl } from './info';
 export interface ModelManagerOptions {
     apiKey: string;
@@ -71,6 +72,6 @@ export declare class ModelManager {
      *
      * @returns Promise resolving to cache info object with details like age, size, etc.
      */
-    getCacheInfo(): Promise<Record<string, any>>;
+    getCacheInfo(): Promise<CacheInfo>;
 }
 //# sourceMappingURL=manager.d.ts.map

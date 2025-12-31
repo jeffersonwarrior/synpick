@@ -297,20 +297,52 @@ install_package() {
 
             # Download and extract
             cd "$INSTALL_DIR"
+            DOWNLOAD_SUCCESS=false
+
+            # Try GitHub tarball first
             if command_exists curl; then
                 if curl -sL "$TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
                     progress
+                    DOWNLOAD_SUCCESS=true
                 else
-                    error "Failed to download repository with curl"
-                    exit 1
+                    warn "Failed to download version $SYNCLAUDE_VERSION from GitHub, trying main branch..."
                 fi
             elif command_exists wget; then
                 if wget -qO- "$TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
                     progress
+                    DOWNLOAD_SUCCESS=true
                 else
-                    error "Failed to download repository with wget"
-                    exit 1
+                    warn "Failed to download version $SYNCLAUDE_VERSION from GitHub, trying main branch..."
                 fi
+            fi
+
+            # Fallback: download from main branch if version specific failed
+            if [ "$DOWNLOAD_SUCCESS" = false ]; then
+                MAIN_TARBALL_URL="https://github.com/jeffersonwarrior/synclaude/archive/refs/heads/main.tar.gz"
+                if command_exists curl; then
+                    if curl -sL "$MAIN_TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
+                        progress
+                        DOWNLOAD_SUCCESS=true
+                        info "Downloaded from main branch"
+                    else
+                        error "Failed to download from GitHub"
+                        exit 1
+                    fi
+                elif command_exists wget; then
+                    if wget -qO- "$MAIN_TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
+                        progress
+                        DOWNLOAD_SUCCESS=true
+                        info "Downloaded from main branch"
+                    else
+                        error "Failed to download from GitHub"
+                        exit 1
+                    fi
+                fi
+            fi
+
+            if [ "$DOWNLOAD_SUCCESS" = false ]; then
+                error "Failed to download from GitHub repository"
+                exit 1
             fi
 
             # Install dependencies
@@ -346,17 +378,10 @@ install_package() {
             NPM_GLOBAL_INSTALL=true
             info "Package installed from source"
 
-            # If the above failed for any reason, fallback to npm registry
+            # Verify installation was successful
             if [ ! -f "$NPM_BIN_DIR/synclaude" ] || [ ! -x "$NPM_BIN_DIR/synclaude" ]; then
-                warn "Source build failed, trying npm registry fallback"
-                if npm install -g git+https://github.com/jeffersonwarrior/synclaude.git#main >/dev/null 2>&1; then
-                    progress
-                    NPM_GLOBAL_INSTALL=true
-                    info "Package installed globally via git repository"
-                else
-                    error "Both source build and npm registry install failed"
-                    exit 1
-                fi
+                error "Installation failed - synclaude not found at $NPM_BIN_DIR/synclaude"
+                exit 1
             fi
         fi
     else
@@ -371,20 +396,49 @@ install_package() {
         # Download and extract repository
         cd "$INSTALL_DIR"
         progress
+        DOWNLOAD_SUCCESS=false
+
+        # Try GitHub tarball first
         if command_exists curl; then
             if curl -sL "$TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
                 progress
+                DOWNLOAD_SUCCESS=true
             else
-                error "Failed to download repository with curl"
-                exit 1
+                warn "Failed to download version $SYNCLAUDE_VERSION from GitHub, trying main branch..."
             fi
         elif command_exists wget; then
             if wget -qO- "$TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
                 progress
+                DOWNLOAD_SUCCESS=true
             else
-                error "Failed to download repository with wget"
-                exit 1
+                warn "Failed to download version $SYNCLAUDE_VERSION from GitHub, trying main branch..."
             fi
+        fi
+
+        # Fallback: download from main branch if version specific failed
+        if [ "$DOWNLOAD_SUCCESS" = false ]; then
+            MAIN_TARBALL_URL="https://github.com/jeffersonwarrior/synclaude/archive/refs/heads/main.tar.gz"
+            if command_exists curl; then
+                if curl -sL "$MAIN_TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
+                    progress
+                    DOWNLOAD_SUCCESS=true
+                    info "Downloaded from main branch"
+                fi
+            elif command_exists wget; then
+                if wget -qO- "$MAIN_TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
+                    progress
+                    DOWNLOAD_SUCCESS=true
+                    info "Downloaded from main branch"
+                else
+                    error "Failed to download from GitHub"
+                    exit 1
+                fi
+            fi
+        fi
+
+        if [ "$DOWNLOAD_SUCCESS" = false ]; then
+            error "Failed to download from GitHub repository"
+            exit 1
         fi
 
         # Install dependencies and build
@@ -574,6 +628,14 @@ show_final_message() {
     echo ""
     success "synclaude installed successfully!"
     echo "Version: $VERSION_INSTALLED"
+
+    # Set up nvm for Node.js v24.12.0 if nvm is available
+    if command_exists nvm; then
+        progress
+        info "Configuring nvm for Node.js v24.12.0..."
+        nvm use --delete-prefix v24.12.0 --silent 2>/dev/null || \
+            warn "Could not set nvm to v24.12.0. Please run manually: nvm use v24.12.0"
+    fi
 
     if [ "$NPM_GLOBAL_INSTALL" = "true" ]; then
         if [ "$LOCAL" = "true" ]; then

@@ -1,7 +1,11 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 import { ConfigManager } from '../config/index.js';
 import chalk from 'chalk';
+// ESM polyfill for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = join(__filename, '..');
 export function normalizeDangerousFlags(args) {
     const dangerousPatterns = [
         /^--dangerously-skip-permissions$/, // correct

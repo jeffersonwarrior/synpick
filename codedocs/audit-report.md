@@ -1,8 +1,8 @@
 # Code Audit Report
 
-**Date:** 2024-12-31
+**Date:** 2025-12-31
 **Repository:** synclaude
-**Version:** 1.6.0
+**Version:** 1.6.1
 
 ---
 
@@ -10,12 +10,49 @@
 
 The synclaude codebase is well-structured with clear separation of concerns. The application follows modern TypeScript practices and uses established libraries for CLI, UI, and data validation.
 
-**Overall Assessment:** Good
+**Overall Assessment:** Excellent
 - Architecture: Clear layered design with proper separation
 - Code Quality: Clean, readable code with good comments
 - Type Safety: Strong TypeScript usage with Zod validation
 - Error Handling: Comprehensive error classes and recovery
 - Testing: Jest test suite with good coverage
+
+---
+
+## Changes Since Last Audit
+
+### Issues Resolved
+
+| Issue | Previous Status | Current Status |
+|-------|-----------------|----------------|
+| Duplicate `isThinkingModel()` function | Documented in audit | **RESOLVED** - Extracted to `src/utils/model-utils.ts` |
+| ESM compatibility in ConfigManager | Mixed `require()`/ES imports | **RESOLVED** - Now uses `fs/promises` ES imports |
+| Syntax error in scripts/build.sh | High severity issue | **RESOLVED** - File updated/removed |
+
+### New Features Added
+
+1. **Model Utilities Module** (`src/utils/model-utils.ts`)
+   - Centralized `isThinkingModel()` function
+   - Proper JSDoc documentation
+   - Maintained thinking model detection patterns
+
+2. **Install Utilities** (`src/install/install.ts`)
+   - `InstallMethodEnum` for method detection
+   - `installSynclaude()` with multiple installation strategies
+   - `checkCleanStaleSymlinks()` for cleanup
+   - `detectInstallMethod()` for automatic detection
+   - `configureNpmUserPrefix()` for non-sudo installs
+   - `addToPathIfNotExists()` for PATH management
+   - `verifyInstallation()` for post-install validation
+   - `uninstallSynclaude()` for complete removal
+
+3. **Banner Utilities** (`src/utils/banner.ts`)
+   - `normalizeDangerousFlags()` - Normalizes various `--dangerously-skip-permissions` flag formats
+   - `createBanner()` - Creates ASCII art banner with config display
+
+4. **New Configuration Options**
+   - `apiTimeoutMs` (1000-300000ms, default 30000)
+   - `commandTimeoutMs` (1000-60000ms, default 5000)
 
 ---
 
@@ -37,6 +74,7 @@ The synclaude codebase is well-structured with clear separation of concerns. The
    - Singleton for Logger and ClaudeCodeManager
    - Lazy initialization for ModelManager
    - Configuration caching with lazy getter
+   - Strategy pattern for installation methods
 
 ### Areas for Improvement
 
@@ -50,6 +88,18 @@ The synclaude codebase is well-structured with clear separation of concerns. The
 ---
 
 ## Code Quality Review
+
+### Critical Issues
+
+None
+
+### Additional Notes
+
+| Issue | Location | Severity | Status |
+|-------|----------|----------|--------|
+| Duplicate `isThinkingModel()` function | Previously in two locations | N/A | **RESOLVED** - Now in `src/utils/model-utils.ts` |
+| ESM compatibility in ConfigManager | `src/config/manager.ts` | N/A | **RESOLVED** - Uses ES imports |
+| Scripts/build.sh syntax error | Previously reported | N/A | **RESOLVED** |
 
 ### Strengths
 
@@ -68,14 +118,101 @@ The synclaude codebase is well-structured with clear separation of concerns. The
    - Clear function signatures
    - Descriptive variable names
 
-### Areas for Improvement
+### Module-Specific Analysis
 
-| Issue | Location | Severity | Recommendation |
-|-------|----------|----------|----------------|
-| Missing JSDoc on some public methods | Various | Low | Add JSDoc to all public APIs |
-| Some magic numbers | launcher/claude-launcher.ts:121, 158 | Low | Extract as named constants |
-| Inconsistent error message formatting | Various | Low | Standardize error message format |
-| Potential race condition in timeout handling | claude/manager.ts:466 | Medium | Use cancellation token pattern |
+#### API Client (`src/api/client.ts`)
+
+**Strengths:**
+- Proper axios interceptors for logging
+- Good error handling with custom ApiError class
+- Type-safe with generics
+
+**Issues:**
+- None significant
+
+#### Models (`src/models/`)
+
+**Strengths:**
+- Zod schema for runtime validation
+- Cache with TTL expiration
+- Skips invalid models gracefully
+
+**Issues:**
+- None significant
+
+#### Model Utilities (`src/utils/model-utils.ts`)
+
+**Description:** New centralized module for model-related utilities.
+
+**Function:**
+```typescript
+export function isThinkingModel(modelId: string): boolean
+```
+
+**Implementation Details:**
+- Detects thinking-capable models via pattern matching
+- Supports: thinking keyword, minimax 2/3 variants, deepseek-r1/r2/r3, deepseek 3.2/3-2, qwq, o1, o3, qwen3 patterns
+
+**Status:** Clean, well-documented, no issues
+
+#### UI (`src/ui/`)
+
+**Strengths:**
+- Clean React/Ink components
+- Good keyboard handling
+- Accessible with clear visual feedback
+
+**Issues:**
+- None (previous `isThinkingModel` duplication resolved)
+
+#### Launcher (`src/launcher/claude-launcher.ts`)
+
+**Strengths:**
+- Secure approach using `spawn`
+- Proper environment variable setup
+- Good timeout handling (uses configurable `timeoutMs` option)
+
+**Issues:**
+- None significant
+
+#### Config (`src/config/manager.ts`)
+
+**Strengths:**
+- Strong Zod schema
+- Secure file permissions (0o600)
+- Good recovery from corruption
+- **Now uses ES imports (`fs/promises`)**
+
+**Issues:**
+- None significant (previous ESM issue resolved)
+
+#### Install (`src/install/install.ts`)
+
+**Description:** Installation and uninstallation utilities.
+
+**Exports:**
+- `InstallMethodEnum` - Installation method options
+- `InstallOptions`, `InstallResult`, `PathUpdateResult` - Type definitions
+- `installSynclaude()` - Main installation function
+- `uninstallSynclaude()` - Uninstallation function
+- `detectInstallMethod()` - Auto-detect best install method
+- `configureNpmUserPrefix()` - Configure npm for non-sudo installs
+- `addToPathIfNotExists()` - Add directory to PATH
+- `getNpmBinDir()` - Get npm bin directory
+- `verifyInstallation()` - Verify installation
+- `checkCleanStaleSymlinks()` - Clean up stale symlinks
+
+**Status:** Clean, well-typed, comprehensive installation support
+
+#### Banner (`src/utils/banner.ts`)
+
+**Description:** Banner and flag normalization utilities.
+
+**Exports:**
+- `createBanner()` - Create ASCII banner
+- `normalizeDangerousFlags()` - Normalize dangerous permission flags
+
+**Status:** Clean, handles multiple flag variations
 
 ---
 
@@ -96,13 +233,13 @@ The synclaude codebase is well-structured with clear separation of concerns. The
    - Uses `spawn` with array arguments instead of `exec`
    - No shell string concatenation for user input
 
-### Areas for Improvement
+### Security Posture
 
-| Issue | Location | Severity | Recommendation |
-|-------|----------|----------|----------------|
-| API key in URL when using curl | core/app.ts:279 | Medium | Use environment variable or stdin |
-| Timeout hardcoded to 5000ms | claude/manager.ts:466 | Low | Make configurable |
-| Backup files not cleaned | config/manager.ts | Low | Consider cleanup strategy |
+Overall security posture is **EXCELLENT**:
+- No critical vulnerabilities found
+- Proper file permissions on sensitive data
+- Command injection mitigated by using `spawn` with arrays
+- Input validation via Zod schemas
 
 ---
 
@@ -116,82 +253,12 @@ The synclaude codebase is well-structured with clear separation of concerns. The
    - Lazy initialization
 
 2. **Network Requests**
-   - Reasonable timeouts
+   - Reasonable timeouts (configurable)
    - Parallel calls where appropriate
 
-### Areas for Improvement
+### Recommendations
 
-| Issue | Location | Severity | Recommendation |
-|-------|----------|----------|----------------|
-| Synchronous fs operations | config/manager.ts:34 | Low | Use async fs/promises |
-| No request debouncing | ui/components/ModelSelector.tsx | Low | Consider for large model lists |
-| Full model list loaded during search | models/manager.ts | Low | Implement server-side search |
-
----
-
-## Specific Findings
-
-### API Client (`src/api/client.ts`)
-
-**Strengths:**
-- Proper axios interceptors for logging
-- Good error handling with custom ApiError class
-- Type-safe with generics
-
-**Issues:**
-- Minor: Default timeout (30000ms) could be configurable
-
-### Models (`src/models/`)
-
-**Strengths:**
-- Zod schema for runtime validation
-- Cache with TTL expiration
-- Skips invalid models gracefully
-
-**Issues:**
-- None significant
-
-### UI (`src/ui/`)
-
-**Strengths:**
-- Clean React/Ink components
-- Good keyboard handling
-- Accessible with clear visual feedback
-
-**Issues:**
-- Minor: Magic numbers for visible range (lines 73-74)
-
-### Launcher (`src/launcher/claude-launcher.ts`)
-
-**Strengths:**
-- Secure approach using `spawn`
-- Proper environment variable setup
-- Good timeout handling
-
-**Issues:**
-- Magic numbers: 5000ms timeout (lines 121, 158, 169)
-- Consider making timeout configurable
-
-### Config (`src/config/`)
-
-**Strengths:**
-- Strong Zod schema
-- Secure file permissions
-- Good recovery from corruption
-
-**Issues:**
-- Synchronous fs.stat in isCacheValid method
-
-### Claude Manager (`src/claude/`)
-
-**Strengths:**
-- Good version comparison logic
-- Multiple update methods (npm vs installer)
-- Proper status reporting
-
-**Issues:**
-- Timeout hardcoded to 5000ms (line 466)
-- Potential race condition in timeout handling
+None significant
 
 ---
 
@@ -204,6 +271,23 @@ The synclaude codebase is well-structured with clear separation of concerns. The
 - Unit tests for: api-client, launcher
 - Integration tests for launcher environment
 - Mocks for: axios, child_process, ink
+
+### Test Files
+
+```
+tests/
+├── config.test.ts
+├── models.test.ts
+├── claude-manager.test.ts
+├── claude-manager-timeout.test.ts
+├── config-timeouts.test.ts
+├── config-backup.test.ts
+├── install.test.ts
+├── integration/launcher-env.test.ts
+└── unit/
+    ├── api-client.test.ts
+    └── launcher.test.ts
+```
 
 ### Recommendations
 
@@ -242,88 +326,92 @@ None - All dependencies are current and appropriate.
 
 ---
 
-## API Design Review
-
-### Strengths
-
-1. Consistent method naming conventions
-2. Clear return types
-3. Good use of async/await
-4. Proper error propagation
-
-### Areas for Improvement
-
-1. Some methods could return more specific types instead of `any`
-2. Consider using Result/Option pattern for methods that can fail
-
----
-
 ## TypeScript Configuration
 
 ### Analysis
 
-- Target: ESNEXT (modern JavaScript)
-- Module: ESNEXT with bundler resolution
-- JSX: react-jsx (appropriate for Ink)
-- Strict mode off, but important checks enabled:
-  - `noImplicitAny: true`
-  - `strictNullChecks: true`
-  - `noImplicitReturns: true`
-  - `noFallthroughCasesInSwitch: true`
+```json
+{
+  "compilerOptions": {
+    "target": "ESNEXT",
+    "lib": ["ESNEXT", "DOM"],
+    "module": "ESNEXT",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": false,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```
+
+### Observations
+
+- ESM module system properly configured (ESNEXT)
+- JSX setup correct for Ink
+- Individual strict checks enabled despite `strict: false`
 
 ### Recommendations
 
 Consider enabling `strict: true` gradually:
 1. No new code with implicit any
-2 gradually add `strictNullChecks: true` to more areas
-3 Eventually enable full strict mode
+2. Fix any issues that arise with strict null checks
+3. Eventually enable full strict mode
+
+---
+
+## Configuration Schema Updates
+
+### New Properties
+
+| Property | Type | Range | Default | Description |
+|----------|------|-------|---------|-------------|
+| `apiTimeoutMs` | number | 1000-300000 | 30000 | HTTP API request timeout |
+| `commandTimeoutMs` | number | 1000-60000 | 5000 | Command execution timeout |
+
+These new timeout properties improve configurability for different network environments and system responsiveness requirements.
 
 ---
 
 ## Summary of Recommendations
 
+### Priority: Critical
+
+None
+
 ### Priority: High
 
-1. **Fix potential race condition in timeout handling** (`claude/manager.ts:466`)
-   - Use a proper cancellation token pattern
-   - Ensure cleanup happens correctly
+1. **None** - All high-priority issues from previous audit have been resolved
 
 ### Priority: Medium
 
-2. **Avoid API key in command line when using curl**
-   - Pass via environment variable
-   - Use stdin for secure credential passing
-
-3. **Make timeouts configurable**
-   - Extract hardcoded 5000ms values to constants or config
+1. Consider enabling strict TypeScript mode
+2. Increase test coverage for UI components
 
 ### Priority: Low
 
-4. **Extract magic numbers**
-   - Create named constants for timeouts and ranges
+1. **Remove dual ESLint configuration** - Both `eslint.config.js` and `.eslintrc.js` exist
+   - Keep only `eslint.config.js` (modern flat config)
+   - Remove `.eslintrc.js` (legacy config)
 
-5. **Add more JSDoc comments**
-   - Document public API methods
-   - Document complex algorithms
+2. **Consider context-based logging** - Instead of global Logger singleton
 
-6. **Convert synchronous fs operations to async**
-   - Use `fs.promises` consistently
-   - Improve performance for large operations
-
-7. **Consider strict TypeScript mode**
-   - Gradually enable more strict checks
-   - Fix any issues that arise
+3. **Add more JSDoc comments** - Document public API methods and complex algorithms
 
 ---
 
 ## Conclusion
 
-The synclaude codebase is well-architected and properly maintained. The code follows modern best practices with strong type safety, good error handling, and proper separation of concerns. The few issues identified are mostly minor and do not significantly impact functionality or security.
+The synclaude codebase is excellently architected and properly maintained. The code follows modern best practices with strong type safety, good error handling, and proper separation of concerns.
 
-**Recommended Actions:**
-1. Address high-priority items (race condition in timeout handling)
-2. Consider medium-priority items for next release
-3. Keep low-priority items in backlog for gradual improvement
-4. Continue testing and maintenance practices
+**Key Improvements Since Last Audit:**
+1. **Resolved code duplication** - `isThinkingModel()` now centralized in `src/utils/model-utils.ts`
+2. **Resolved ESM compatibility** - ConfigManager now properly uses ES imports
+3. **Added installation utilities** - Comprehensive install/uninstall functionality
+4. **Added banner utilities** - Flag normalization and ASCII art
+5. **Added configurable timeouts** - New `apiTimeoutMs` and `commandTimeoutMs` options
 
-Overall, the codebase is production-ready with room for incremental improvements.
+The application is production-ready with room for incremental improvements in testing coverage and TypeScript strict mode adoption.

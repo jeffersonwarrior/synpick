@@ -22,4 +22,8 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  // Force Jest to exit after all tests complete, even if there are open handles
+  // This is needed because some tests create setTimeout/setImmediate that
+  // keep the event loop alive (e.g., in checkClaudeInstallation tests)
+  forceExit: true,
 };

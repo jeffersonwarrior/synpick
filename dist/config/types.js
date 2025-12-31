@@ -61,6 +61,7 @@ export const AppConfigSchema = z.object({
         .describe('Command execution timeout in milliseconds'),
 });
 export class ConfigValidationError extends Error {
+    cause;
     constructor(message, cause) {
         super(message);
         this.cause = cause;
@@ -68,6 +69,7 @@ export class ConfigValidationError extends Error {
     }
 }
 export class ConfigLoadError extends Error {
+    cause;
     constructor(message, cause) {
         super(message);
         this.cause = cause;
@@ -75,6 +77,7 @@ export class ConfigLoadError extends Error {
     }
 }
 export class ConfigSaveError extends Error {
+    cause;
     constructor(message, cause) {
         super(message);
         this.cause = cause;

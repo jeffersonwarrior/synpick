@@ -2,6 +2,8 @@
 
 Interactive model selection tool for Claude Code with Synthetic AI models.
 
+**Note**: This is a fork of [jeffersonwarrior/synclaude](https://github.com/jeffersonwarrior/synclaude).
+
 ## Overview
 
 synclaude is a modern TypeScript/Node.js application that provides a seamless interface for selecting and launching Claude Code with various AI models from the Synthetic API.
@@ -31,12 +33,12 @@ synclaude is a modern TypeScript/Node.js application that provides a seamless in
 
 **Linux/Windows:**
 ```bash
-npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.0/synclaude-1.6.0.tgz
+npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.1/synclaude-1.6.1.tgz
 ```
 
 **macOS (if permissions error):**
 ```bash
-sudo npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.0/synclaude-1.6.0.tgz
+sudo npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.1/synclaude-1.6.1.tgz
 ```
 
 **Alternative for macOS (permanent fix):**
@@ -45,7 +47,7 @@ mkdir ~/.npm-global
 npm config set prefix '~/.npm-global'
 echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc
 source ~/.zshrc
-npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.0/synclaude-1.6.0.tgz
+npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.1/synclaude-1.6.1.tgz
 ```
 
 #### Option 2: Download from GitHub Releases
@@ -83,7 +85,7 @@ cd synclaude
 
 **Important**:
 - Direct git installation (`npm install -g https://github.com/.../synclaude.git`) is not supported due to npm's git installation limitations
-- Use the specific release tarball: `https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.0/synclaude-1.6.0.tgz`
+- Use the specific release tarball: `https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.1/synclaude-1.6.1.tgz`
 - Or visit [GitHub Releases](https://github.com/jeffersonwarrior/synclaude/releases) for the latest version
 
 ### Uninstallation
@@ -151,9 +153,13 @@ Synclaude stores configuration in `~/.config/synclaude/config.json`. Key options
 - `apiKey`: Your Synthetic API key
 - `baseUrl`: Synthetic API base URL
 - `modelsApiUrl`: Models endpoint URL
-- `cacheDurationHours`: Model cache duration (1-168 hours)
+- `cacheDurationHours`: Model cache duration (1-168 hours, default 24)
 - `selectedModel`: Last selected model
+- `selectedThinkingModel`: Last selected thinking model
 - `firstRunCompleted`: Whether first-time setup has been completed
+- `maxTokenSize`: Max token size for Claude Code (1000-200000, default 128000)
+- `apiTimeoutMs`: HTTP API request timeout in ms (1000-300000, default 30000)
+- `commandTimeoutMs`: Command execution timeout in ms (1000-60000, default 5000)
 
 ### Updates
 
@@ -172,17 +178,14 @@ The update command:
 - Runs the installer if a newer version is available
 - Only updates from official GitHub releases
 
-#### Manual Update via npm
+#### Manual Update via GitHub
 
 ```bash
-# Update to latest version from npm registry
-npm update -g synclaude
+# Install specific version from GitHub release
+npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.1/synclaude-1.6.1.tgz
 
-# Install specific version
-npm install -g synclaude@1.6.0
-
-# Or reinstall from GitHub release
-npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.0/synclaude-1.6.0.tgz
+# Or run the installer again
+curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synclaude/main/scripts/install.sh | bash
 ```
 
 #### Check Current Version

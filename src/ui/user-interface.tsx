@@ -1,27 +1,12 @@
 import { render } from 'ink';
 import React from 'react';
 import chalk from 'chalk';
+import { createInterface } from 'readline';
 import { ModelInfoImpl } from '../models';
 import { ModelSelector } from './components/ModelSelector';
 import { StatusMessage } from './components/StatusMessage';
 import { BYTES_PER_KB, PERCENTAGE_MAX, DEFAULT_PROGRESS_BAR_LENGTH } from '../utils/constants';
-
-// Helper function to identify thinking-capable models
-function isThinkingModel(modelId: string): boolean {
-  const id = modelId.toLowerCase();
-  // Direct "thinking" keyword
-  if (id.includes('thinking')) return true;
-  // Known thinking model patterns
-  if (id.includes('minimax') && (id.includes('2') || id.includes('3'))) return true;
-  if (id.includes('deepseek-r1') || id.includes('deepseek-r2') || id.includes('deepseek-r3'))
-    return true;
-  if (id.includes('deepseek') && (id.includes('3.2') || id.includes('3-2'))) return true;
-  if (id.includes('qwq')) return true;
-  if (id.includes('o1')) return true; // OpenAI o1 series
-  if (id.includes('o3')) return true; // OpenAI o3 series
-  if (id.includes('qwen3')) return true; // Qwen 3 thinking variants
-  return false;
-}
+import { isThinkingModel } from '../utils';
 
 export interface UIOptions {
   verbose?: boolean;
@@ -56,7 +41,7 @@ export class UserInterface {
    * @param message - The message to display
    * @param args - Additional arguments to log
    */
-  info(message: string, ...args: any[]): void {
+  info(message: string, ...args: unknown[]): void {
     if (!this.quiet) {
       console.log(`ℹ ${message}`, ...args);
     }
@@ -68,7 +53,7 @@ export class UserInterface {
    * @param message - The message to display
    * @param args - Additional arguments to log
    */
-  success(message: string, ...args: any[]): void {
+  success(message: string, ...args: unknown[]): void {
     if (!this.quiet) {
       console.log(`✓ ${message}`, ...args);
     }
@@ -80,7 +65,7 @@ export class UserInterface {
    * @param message - The message to display
    * @param args - Additional arguments to log
    */
-  coloredSuccess(message: string, ...args: any[]): void {
+  coloredSuccess(message: string, ...args: unknown[]): void {
     if (!this.quiet) {
       console.log(chalk.green(`✓ ${message}`), ...args);
     }
@@ -92,7 +77,7 @@ export class UserInterface {
    * @param message - The message to display
    * @param args - Additional arguments to log
    */
-  coloredInfo(message: string, ...args: any[]): void {
+  coloredInfo(message: string, ...args: unknown[]): void {
     if (!this.quiet) {
       console.log(chalk.blue(`ℹ ${message}`), ...args);
     }
@@ -126,7 +111,7 @@ export class UserInterface {
    * @param message - The message to display
    * @param args - Additional arguments to log
    */
-  warning(message: string, ...args: any[]): void {
+  warning(message: string, ...args: unknown[]): void {
     if (!this.quiet) {
       console.warn(`⚠ ${message}`, ...args);
     }
@@ -140,7 +125,7 @@ export class UserInterface {
    * @param message - The message to display
    * @param args - Additional arguments to log
    */
-  error(message: string, ...args: any[]): void {
+  error(message: string, ...args: unknown[]): void {
     console.error(`✗ ${message}`, ...args);
   }
 
@@ -152,7 +137,7 @@ export class UserInterface {
    * @param message - The message to display
    * @param args - Additional arguments to log
    */
-  debug(message: string, ...args: any[]): void {
+  debug(message: string, ...args: unknown[]): void {
     if (this.verbose) {
       console.debug(`🐛 ${message}`, ...args);
     }
@@ -180,12 +165,12 @@ export class UserInterface {
 
       console.log(`${marker} ${index + 1}. ${chalk.cyan(displayName)}${thoughtsuffix}`);
       console.log(`    ${chalk.gray('Provider:')} ${model.getProvider()}`);
-      if ((model as any).context_length) {
-        const contextK = Math.round((model as any).context_length / BYTES_PER_KB);
+      if ('context_length' in model && typeof model.context_length === 'number') {
+        const contextK = Math.round(model.context_length / BYTES_PER_KB);
         console.log(`    ${chalk.gray('Context:')} ${contextK}K tokens`);
       }
-      if ((model as any).quantization) {
-        console.log(`    ${chalk.gray('Quantization:')} ${(model as any).quantization}`);
+      if ('quantization' in model && model.quantization) {
+        console.log(`    ${chalk.gray('Quantization:')} ${model.quantization}`);
       }
       console.log(`    ${chalk.gray('ID:')} ${model.id}`);
       console.log('');
@@ -307,7 +292,7 @@ export class UserInterface {
    */
   async askQuestion(question: string, defaultValue?: string): Promise<string> {
     return new Promise(resolve => {
-      const rl = require('readline').createInterface({
+      const rl = createInterface({
         input: process.stdin,
         output: process.stdout,
       });

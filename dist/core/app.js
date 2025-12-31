@@ -2,7 +2,7 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { execSync } from 'child_process';
 import axios from 'axios';
-import { ConfigManager } from '../config/index.js';
+import { ConfigManager, AppConfigSchema } from '../config/index.js';
 import { ModelManager } from '../models/index.js';
 import { UserInterface } from '../ui/index.js';
 import { ClaudeLauncher } from '../launcher/index.js';
@@ -15,13 +15,17 @@ import { ClaudeCodeManager } from '../claude/index.js';
  * Orchestrates model management, configuration, and Claude Code launching.
  */
 export class SyntheticClaudeApp {
+    configManager;
+    ui;
+    launcher;
+    modelManager = null;
+    claudeCodeManager;
     /**
      * Creates a new SyntheticClaudeApp instance
      *
      * Initializes config manager, UI, launcher, and Claude Code manager.
      */
     constructor() {
-        this.modelManager = null;
         this.configManager = new ConfigManager();
         const config = this.configManager.config;
         this.ui = new UserInterface({
@@ -539,7 +543,7 @@ export class SyntheticClaudeApp {
             return;
         }
         // Clear config
-        await this.configManager.saveConfig(require('../config').AppConfigSchema.parse({}));
+        await this.configManager.saveConfig(AppConfigSchema.parse({}));
         this.ui.success('Configuration reset to defaults');
     }
     /**

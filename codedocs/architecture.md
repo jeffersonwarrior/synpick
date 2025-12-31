@@ -28,7 +28,7 @@
 │  │  - Orchestrates all components                          │   │
 │  │  - Handles core workflows (setup, run, model selection)  │   │
 │  │  - Manages Claude Code updates                          │   │
-│  │  - Coordinates config, models, UI, launcher              │   │
+│  │  - Coordinates config, models, UI, launcher, install     │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └────┬───────────────────────────────────────────────┬───────────┘
      │                                               │
@@ -63,6 +63,11 @@
 │  │ ClaudeMgr  │  │                     │                      │
 │  │   Module   │  │                     │                      │
 │  └────────────┘  │                     │                      │
+│                  │                     │                      │
+│  ┌────────────┐  │                     │                      │
+│  │ InstallMod │  │                     │                      │
+│  │   Module   │  │                     │                      │
+│  └────────────┘  │                     │                      │
 └──────────────────┘                     └──────────────────────┘
 ```
 
@@ -87,6 +92,7 @@
 - `synclaude doctor` - System health check
 - `synclaude update` - Update Claude Code
 - `synclaude dangerously` - Launch with --dangerously-skip-permissions
+- `synclaude install` - Local system-wide installation
 
 ### 2. Core Application (`src/core/app.ts`)
 
@@ -130,6 +136,7 @@ class SyntheticClaudeApp {
 - `UserInterface` - Terminal UI
 - `ClaudeLauncher` - Process launcher
 - `ClaudeCodeManager` - Version management
+- `installSynclaude` - Local installation utilities
 
 ### 3. Configuration Layer (`src/config/`)
 
@@ -137,7 +144,7 @@ class SyntheticClaudeApp {
 
 **Files:**
 - `types.ts` - Zod schema and error classes
-- `manager.ts` - ConfigManager class
+- `manager.ts` - ConfigManager class (now uses ES modules)
 
 **Configuration Schema:**
 ```typescript
@@ -154,6 +161,8 @@ interface AppConfig {
   claudeCodeUpdateCheckInterval: number  // 1-720 hours
   lastClaudeCodeUpdateCheck?: string  // ISO timestamp
   maxTokenSize: number  // 1000-200000
+  apiTimeoutMs: number  // 1000-300000, default 30000
+  commandTimeoutMs: number  // 1000-60000, default 5000
 }
 ```
 
@@ -202,16 +211,17 @@ interface ModelInfo {
 }
 ```
 
-### 5. UI Layer (`src/ui/`)
+### 5. Model Utilities (`src/utils/`)
 
-**Purpose:** Interactive terminal UI using React/Ink.
+**Purpose:** Shared utilities for model-related operations.
 
 **Files:**
-- `user-interface.tsx` - UserInterface class
-- `components/ModelSelector.tsx` - Interactive model selection
-- `components/ModelList.tsx` - Model list display
-- `components/ProgressBar.tsx` - Progress display
-- `components/StatusMessage.tsx` - Status display
+- `model-utils.ts` - Model-related utility functions
+
+**Key Function:**
+```typescript
+isThinkingModel(modelId: string): boolean
+```
 
 **Thinking Model Detection:**
 ```typescript
@@ -229,7 +239,33 @@ function isThinkingModel(modelId: string): boolean {
 }
 ```
 
-### 6. Launcher Layer (`src/launcher/`)
+### 6. Banner Utilities (`src/utils/`)
+
+**Purpose:** Banner creation and flag normalization.
+
+**Files:**
+- `banner.ts` - Banner and flag utilities
+
+**Functions:**
+```typescript
+createBanner(options: { verbose?: boolean; additionalArgs?: string[] }): string
+normalizeDangerousFlags(args: string[]): string[]
+```
+
+### 7. UI Layer (`src/ui/`)
+
+**Purpose:** Interactive terminal UI using React/Ink.
+
+**Files:**
+- `user-interface.tsx` - UserInterface class
+- `components/ModelSelector.tsx` - Interactive model selection
+- `components/ModelList.tsx` - Model list display
+- `components/ProgressBar.tsx` - Progress display
+- `components/StatusMessage.tsx` - Status display
+
+**Uses:** `isThinkingModel()` from `src/utils/model-utils.ts` for model classification
+
+### 8. Launcher Layer (`src/launcher/`)
 
 **Purpose:** Spawn Claude Code with configured environment variables.
 
@@ -248,17 +284,43 @@ CLAUDE_CODE_MAX_TOKEN_SIZE="<maxTokenSize>"
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
 ```
 
-### 7. API Client (`src/api/`)
+### 9. Install Layer (`src/install/`)
+
+**Purpose:** Installation and uninstallation utilities.
+
+**Files:**
+- `install.ts` - InstallModule with installation strategies
+
+**Key Functions:**
+- `installSynclaude()` - Main installation with multiple strategies
+- `uninstallSynclaude()` - Complete removal
+- `detectInstallMethod()` - Auto-detect best installation method
+- `configureNpmUserPrefix()` - Configure npm for non-sudo installs
+- `addToPathIfNotExists()` - Add directory to PATH
+- `verifyInstallation()` - Verify installation
+- `checkCleanStaleSymlinks()` - Clean up stale symlinks
+- `getNpmBinDir()` - Get npm bin directory
+
+**Installation Methods:**
+```typescript
+enum InstallMethodEnum {
+  NPM_USER_PREFIX = 'npm_user_prefix',
+  NPM_GLOBAL = 'npm_global',
+  MANUAL_LOCAL = 'manual_local'
+}
+```
+
+### 10. API Client (`src/api/`)
 
 **Purpose:** Axios-based HTTP client with interceptors and error handling.
 
 **Features:**
 - Request/response interceptors for logging
-- Timeout management (default 30s)
+- Timeout management (default 30s, configurable via `apiTimeoutMs`)
 - Automatic error parsing
 - ApiError class for structured errors
 
-### 8. Claude Manager (`src/claude/`)
+### 11. Claude Manager (`src/claude/`)
 
 **Purpose:** Manage Claude Code installation and updates.
 
@@ -269,6 +331,7 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
 - Run official installer curl script
 - Check for updates without installing
 - Get installation info (path, symlink status)
+- Configurable timeout via `timeoutMs` option
 
 ## Design Patterns
 
@@ -342,6 +405,25 @@ get config(): AppConfig {
 }
 ```
 
+### Strategy Pattern
+
+Installation uses different strategies based on environment:
+
+```typescript
+function installSynclaude(options: InstallOptions): Promise<boolean> {
+  const method = detectInstallMethod();
+
+  switch (method) {
+    case InstallMethodEnum.NPM_USER_PREFIX:
+      // User prefix strategy
+    case InstallMethodEnum.NPM_GLOBAL:
+      // Global npm strategy
+    case InstallMethodEnum.MANUAL_LOCAL:
+      // Manual strategy
+  }
+}
+```
+
 ## Error Handling Strategy
 
 ### Custom Error Classes
@@ -387,21 +469,68 @@ export class ApiError extends Error {
 
 ## TypeScript Configuration
 
+**Location:** `tsconfig.json`
+
 ```json
 {
   "compilerOptions": {
     "target": "ESNEXT",
+    "lib": ["ESNEXT", "DOM"],
     "module": "ESNEXT",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
     "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
     "noImplicitAny": true,
     "strictNullChecks": true,
+    "strictFunctionTypes": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "declaration": true,
-    "sourceMap": true
-  }
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
 }
+```
+
+**Key Settings:**
+- `"type": "module"` in package.json - Enables ESM
+- `moduleResolution: "bundler"` - Modern resolution for bundlers
+- `jsx: "react-jsx"` - Automatic JSX runtime for Ink
+
+## Module Dependencies
+
+```
+core/app.ts
+├── config/manager.ts
+├── models/manager.ts
+│   ├── models/types.ts
+│   ├── models/info.ts
+│   ├── models/cache.ts
+│   └── api/client.ts
+├── ui/user-interface.tsx
+│   ├── ui/components/
+│   └── utils/model-utils.ts
+├── launcher/claude-launcher.ts
+├── claude/manager.ts
+├── install/install.ts
+└── utils/
+    ├── logger.ts
+    ├── banner.ts
+    └── model-utils.ts
 ```

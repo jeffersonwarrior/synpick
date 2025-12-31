@@ -36,19 +36,19 @@ export const ModelList: React.FC<ModelListProps> = ({
           <Text color="gray">
             {'    '}Provider: {model.getProvider()}
           </Text>
-          {(model as any).context_length && (
+          {'context_length' in model && typeof model.context_length === 'number' && (
             <>
               {'\n'}
               <Text color="gray">
-                {'    '}Context: {Math.round((model as any).context_length / BYTES_PER_KB)}K tokens
+                {'    '}Context: {Math.round(model.context_length / BYTES_PER_KB)}K tokens
               </Text>
             </>
           )}
-          {(model as any).quantization && (
+          {'quantization' in model && model.quantization && (
             <>
               {'\n'}
               <Text color="gray">
-                {'    '}Quantization: {(model as any).quantization}
+                {'    '}Quantization: {model.quantization}
               </Text>
             </>
           )}

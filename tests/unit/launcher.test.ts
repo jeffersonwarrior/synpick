@@ -27,9 +27,6 @@ describe('ClaudeLauncher', () => {
     delete (process.env as any).EXISTING_VAR;
     delete (process.env as any).CUSTOM_VAR;
     delete (process.env as any).ANTHROPIC_THINKING_MODEL;
-
-    // Mock console methods to reduce noise in test output
-    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {

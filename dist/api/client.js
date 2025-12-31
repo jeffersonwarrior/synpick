@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { ApiError } from '../models/types.js';
 export class ApiClient {
+    axios;
+    defaultHeaders;
     /**
      * Creates a new ApiClient instance
      *

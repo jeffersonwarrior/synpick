@@ -36,7 +36,11 @@ export class Logger {
     return levels[level] >= levels[this.level];
   }
 
-  private formatMessage(level: LogLevel, message: string, ...args: any[]): [string, ...any[]] {
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    ...args: unknown[]
+  ): [string, ...unknown[]] {
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
 
@@ -47,28 +51,28 @@ export class Logger {
     return [`${prefix} ${message}`];
   }
 
-  debug(message: string, ...args: any[]): void {
+  debug(message: string, ...args: unknown[]): void {
     if (this.shouldLog('debug')) {
       const [formattedMessage, ...formattedArgs] = this.formatMessage('debug', message, ...args);
       console.debug(formattedMessage, ...formattedArgs);
     }
   }
 
-  info(message: string, ...args: any[]): void {
+  info(message: string, ...args: unknown[]): void {
     if (this.shouldLog('info')) {
       const [formattedMessage, ...formattedArgs] = this.formatMessage('info', message, ...args);
       console.info(formattedMessage, ...formattedArgs);
     }
   }
 
-  warn(message: string, ...args: any[]): void {
+  warn(message: string, ...args: unknown[]): void {
     if (this.shouldLog('warn')) {
       const [formattedMessage, ...formattedArgs] = this.formatMessage('warn', message, ...args);
       console.warn(formattedMessage, ...formattedArgs);
     }
   }
 
-  error(message: string, ...args: any[]): void {
+  error(message: string, ...args: unknown[]): void {
     if (this.shouldLog('error')) {
       const [formattedMessage, ...formattedArgs] = this.formatMessage('error', message, ...args);
       console.error(formattedMessage, ...formattedArgs);
@@ -113,8 +117,8 @@ export function getLogger(): Logger {
 export const logger = getLogger();
 
 export const log = {
-  debug: (message: string, ...args: any[]) => getLogger().debug(message, ...args),
-  info: (message: string, ...args: any[]) => getLogger().info(message, ...args),
-  warn: (message: string, ...args: any[]) => getLogger().warn(message, ...args),
-  error: (message: string, ...args: any[]) => getLogger().error(message, ...args),
+  debug: (message: string, ...args: unknown[]) => getLogger().debug(message, ...args),
+  info: (message: string, ...args: unknown[]) => getLogger().info(message, ...args),
+  warn: (message: string, ...args: unknown[]) => getLogger().warn(message, ...args),
+  error: (message: string, ...args: unknown[]) => getLogger().error(message, ...args),
 };

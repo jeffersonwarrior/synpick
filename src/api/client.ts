@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { ApiModelsResponse, ApiError } from '../models/types';
 
 export interface ApiClientOptions {
@@ -98,7 +98,7 @@ export class ApiClient {
    * @returns Promise with the Axios response
    * @throws ApiError if the request fails
    */
-  async get<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
+  async get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     try {
       return await this.axios.get<T>(url, config);
     } catch (error) {
@@ -116,7 +116,11 @@ export class ApiClient {
    * @returns Promise with the Axios response
    * @throws ApiError if the request fails
    */
-  async post<T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> {
+  async post<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<T>> {
     try {
       return await this.axios.post<T>(url, data, config);
     } catch (error) {
@@ -134,7 +138,11 @@ export class ApiClient {
    * @returns Promise with the Axios response
    * @throws ApiError if the request fails
    */
-  async put<T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> {
+  async put<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<T>> {
     try {
       return await this.axios.put<T>(url, data, config);
     } catch (error) {
@@ -151,7 +159,7 @@ export class ApiClient {
    * @returns Promise with the Axios response
    * @throws ApiError if the request fails
    */
-  async delete<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
+  async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     try {
       return await this.axios.delete<T>(url, config);
     } catch (error) {
@@ -181,7 +189,7 @@ export class ApiClient {
     }
   }
 
-  private handleError(error: any): ApiError {
+  private handleError(error: unknown): ApiError {
     if (axios.isAxiosError(error)) {
       if (error.response) {
         const status = error.response.status;

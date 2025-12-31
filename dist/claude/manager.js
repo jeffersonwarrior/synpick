@@ -6,6 +6,12 @@ import { join } from 'path';
  * Manages Claude Code installation, updates, and version checking
  */
 export class ClaudeCodeManager {
+    options;
+    static CLAUDE_PACKAGE = '@anthropic-ai/claude-code';
+    static NPM_REGISTRY_URL = 'https://registry.npmjs.org/@anthropic-ai/claude-code';
+    static UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+    static OFFICIAL_INSTALL_URL = 'https://claude.ai/install.sh';
+    timeoutMs;
     constructor(options = {}) {
         this.options = options;
         this.timeoutMs = options.timeoutMs || 5000;
@@ -387,10 +393,6 @@ export class ClaudeCodeManager {
         });
     }
 }
-ClaudeCodeManager.CLAUDE_PACKAGE = '@anthropic-ai/claude-code';
-ClaudeCodeManager.NPM_REGISTRY_URL = 'https://registry.npmjs.org/@anthropic-ai/claude-code';
-ClaudeCodeManager.UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
-ClaudeCodeManager.OFFICIAL_INSTALL_URL = 'https://claude.ai/install.sh';
 /**
  * Default singleton instance
  */

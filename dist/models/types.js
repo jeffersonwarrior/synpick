@@ -43,6 +43,7 @@ export const ModelInfoSchema = z.object({
         .describe('Available datacenters'),
 });
 export class ModelValidationError extends Error {
+    cause;
     constructor(message, cause) {
         super(message);
         this.cause = cause;
@@ -50,6 +51,8 @@ export class ModelValidationError extends Error {
     }
 }
 export class ApiError extends Error {
+    status;
+    response;
     constructor(message, status, response) {
         super(message);
         this.status = status;

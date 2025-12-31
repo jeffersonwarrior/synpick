@@ -3,6 +3,10 @@ import { ApiError } from './types.js';
 import { ModelInfoImpl } from './info.js';
 import { ModelCache } from './cache.js';
 export class ModelManager {
+    apiKey;
+    modelsApiUrl;
+    cache;
+    apiTimeoutMs;
     /**
      * Creates a new ModelManager instance
      *

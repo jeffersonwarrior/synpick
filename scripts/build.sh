@@ -16,8 +16,6 @@ cat dist/cli/index.js >> dist/cli/index.js.cat
 mv dist/cli/index.js.cat dist/cli/index.js
 chmod +x dist/cli/index.js
 
-"
-
 echo "Build complete!"
 echo "CLI executable at: dist/cli/index.js"
 echo "Compiled JavaScript ready for distribution"

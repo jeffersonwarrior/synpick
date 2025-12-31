@@ -50,7 +50,7 @@ export declare class ModelValidationError extends Error {
 }
 export declare class ApiError extends Error {
     status?: number | undefined;
-    response?: any | undefined;
-    constructor(message: string, status?: number | undefined, response?: any | undefined);
+    response?: unknown | undefined;
+    constructor(message: string, status?: number | undefined, response?: unknown | undefined);
 }
 //# sourceMappingURL=types.d.ts.map

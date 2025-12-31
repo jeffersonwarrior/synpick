@@ -82,14 +82,10 @@ describe('ConfigManager - Backup Cleanup', () => {
       const backup1 = join(backupDir, 'backup1.backup');
       const backup2 = join(backupDir, 'backup2.backup');
 
-      await new Promise(resolve => setTimeout(resolve, 10));
       await fs.writeFile(backup1, JSON.stringify({ apiKey: 'old-key-1' }), 'utf-8');
-
-      await new Promise(resolve => setTimeout(resolve, 10));
       await fs.writeFile(backup2, JSON.stringify({ apiKey: 'old-key-2' }), 'utf-8');
 
       // Now we should have 2 backup files (ending with .backup)
-      await new Promise(resolve => setTimeout(resolve, 10));
       const files = await fs.readdir(backupDir);
       const backupFiles = files.filter(f => f.endsWith('.backup'));
 

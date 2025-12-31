@@ -578,6 +578,54 @@ export const log = {
 }
 ```
 
+### Model Utilities
+
+Model-related utility functions for classification and identification.
+
+**Location:** `src/utils/model-utils.ts`
+
+```typescript
+/**
+ * Determines if a model ID represents a thinking-capable model.
+ *
+ * Thinking models are identified through pattern matching on the model ID.
+ * Patterns include:
+ * - Contains "thinking" keyword
+ * - Minimax 2/3 variants
+ * - DeepSeek-R1/R2/R3 variants
+ * - DeepSeek 3.2/3-2 variants
+ * - QWQ models
+ * - OpenAI O1/O3 models
+ * - Qwen3 models
+ *
+ * @param modelId - The model identifier to check
+ * @returns true if the model is identified as a thinking model
+ */
+function isThinkingModel(modelId: string): boolean
+```
+
+**Usage Example:**
+```typescript
+import { isThinkingModel } from './utils/model-utils';
+
+if (isThinkingModel('deepseek:deepseek-r1')) {
+  console.log('This is a thinking model');
+}
+```
+
+**Supported Patterns:**
+| Pattern | Examples |
+|---------|----------|
+| thinking keyword | `x:thinking-model`, `thinking:latest` |
+| minimax 2/3 | `minimax:minimax-2`, `minimax:minimax-3` |
+| deepseek-r1/r2/r3 | `deepseek:deepseek-r1`, `deepseek:deepseek-r2` |
+| deepseek 3.2/3-2 | `deepseek:deepseek-3.2`, `deepseek:deepseek-3-2` |
+| qwq | `qwen:qwq-32b-preview` |
+| o1/o3 | `openai:o1-preview`, `openai:o3-mini` |
+| qwen3 | `qwen:qwen3-72b` |
+
+---
+
 ### Banner
 
 Banner creation and flag normalization utilities.
@@ -597,30 +645,186 @@ function normalizeDangerousFlags(args: string[]): string[]
 
 ### Install Utilities
 
-Installation functions for local and system-wide setups.
+Installation and uninstallation functions for local and system-wide setups.
 
 **Location:** `src/install/install.ts`
 
+#### Types
+
 ```typescript
-enum InstallMethod {
-  NPM_USER_PREFIX,
-  NPM_GLOBAL,
-  MANUAL_LOCAL
+enum InstallMethodEnum {
+  NPM_USER_PREFIX = 'npm_user_prefix',
+  NPM_GLOBAL = 'npm_global',
+  MANUAL_LOCAL = 'manual_local'
 }
 
-async function installSynclaude(options?: {
+interface InstallOptions {
   verbose?: boolean;
-}): Promise<boolean>
+  force?: boolean;
+  skipPath?: boolean;
+}
 
-async function uninstallSynclaude(): Promise<void>
+interface InstallResult {
+  success: boolean;
+  installMethod: InstallMethodEnum;
+  npmBinDir?: string;
+  configuredNpmPrefix?: string;
+  pathUpdated?: boolean;
+  error?: string;
+}
 
-function detectInstallMethod(): InstallMethod
-
-async function configureNpmUserPrefix(): Promise<boolean>
-
-async function addToPathIfNotExists(): Promise<boolean>
-
-async function verifyInstallation(): Promise<boolean>
-
-async function checkCleanStaleSymlinks(): Promise<void>
+interface PathUpdateResult {
+  updated: boolean;
+  configFile?: string;
+  error?: string;
+}
 ```
+
+#### Functions
+
+##### `installSynclaude`
+
+```typescript
+async function installSynclaude(options?: InstallOptions): Promise<boolean>
+```
+
+Main installation function that detects the best installation method and executes it.
+
+**Parameters:**
+- `options.verbose` - Enable verbose logging
+- `options.force` - Force reinstallation
+- `options.skipPath` - Skip PATH updates
+
+**Returns:** `true` if successful, `false` otherwise
+
+**Process:**
+1. Check if already installed
+2. Detect best install method (npm user prefix, npm global, or manual)
+3. Execute corresponding installation strategy
+4. Configure npm user prefix if needed
+5. Update PATH if needed
+6. Verify installation
+
+##### `uninstallSynclaude`
+
+```typescript
+async function uninstallSynclaude(): Promise<void>
+```
+
+Uninstalls synclaude from the system.
+
+**Process:**
+1. Detect installation method
+2. Remove npm global package if installed
+3. Clean up stale symlinks
+4. Remove directory from PATH if applicable
+
+##### `detectInstallMethod`
+
+```typescript
+function detectInstallMethod(): InstallMethodEnum
+```
+
+Detects the best installation method for the current system.
+
+**Detection Logic:**
+- Use `npm_user_prefix` if user can write to npm prefix without sudo
+- Use `npm_global` if user can run npm install -g with sudo
+- Use `manual_local` as fallback
+
+**Returns:** The detected installation method
+
+##### `configureNpmUserPrefix`
+
+```typescript
+async function configureNpmUserPrefix(): Promise<string | null>
+```
+
+Configures npm to use a user-local prefix directory for installations without sudo.
+
+**Returns:** The configured prefix directory, or `null` if failed
+
+**Process:**
+1. Create `.npm-global` directory in home
+2. Run `npm config set prefix`
+3. Verify configuration
+
+##### `addToPathIfNotExists`
+
+```typescript
+async function addToPathIfNotExists(dir?: string): Promise<PathUpdateResult>
+```
+
+Adds a directory to the user's PATH if it's not already there.
+
+**Parameters:**
+- `dir` - Directory to add (defaults to npm bin directory)
+
+**Returns:** Result object with update status
+
+**Supported Files (in order of priority):**
+- `~/.zshenv`
+- `~/.bash_profile`
+- `~/.bashrc`
+- `~/.profile`
+
+##### `getNpmBinDir`
+
+```typescript
+async function getNpmBinDir(): Promise<string>
+```
+
+Gets the npm global binaries directory.
+
+**Returns:** The full path to the npm bin directory
+
+##### `verifyInstallation`
+
+```typescript
+async function verifyInstallation(): Promise<boolean>
+```
+
+Verifies that synclaude is correctly installed and accessible.
+
+**Returns:** `true` if verification passes, `false` otherwise
+
+**Checks:**
+- Can execute `synclaude --version`
+- Version output is valid
+- Binary is accessible from current PATH
+
+##### `checkCleanStaleSymlinks`
+
+```typescript
+async function checkCleanStaleSymlinks(dir?: string): Promise<void>
+```
+
+Checks for and removes stale symlinks in the npm bin directory.
+
+**Parameters:**
+- `dir` - Directory to check (defaults to npm bin directory)
+
+**Process:**
+1. Finds all symlinks pointing to non-existent targets
+2. Reports stale symlinks
+3. Removes them
+
+##### `npmGlobalInstallPathExists`
+
+```typescript
+async function npmGlobalInstallPathExists(): Promise<boolean>
+```
+
+Checks if synclaude is installed globally via npm.
+
+**Returns:** `true` if installed, `false` otherwise
+
+##### `getSynclaudeGlobalInstallPath`
+
+```typescript
+function getSynclaudeGlobalInstallPath(): string | null
+```
+
+Gets the global installation path if synclaude is installed via npm.
+
+**Returns:** The installation path, or `null` if not found
