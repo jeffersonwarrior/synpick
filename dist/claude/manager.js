@@ -342,7 +342,7 @@ class ClaudeCodeManager {
      * Spawn a command and capture output
      */
     spawnCommand(command, args) {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             let stdout = '';
             let stderr = '';
             let resolved = false;
@@ -351,10 +351,10 @@ class ClaudeCodeManager {
                 shell: true,
             });
             if (!this.options.verbose) {
-                child.stdout?.on('data', (data) => {
+                child.stdout?.on('data', data => {
                     stdout += data.toString();
                 });
-                child.stderr?.on('data', (data) => {
+                child.stderr?.on('data', data => {
                     stderr += data.toString();
                 });
             }
@@ -366,7 +366,7 @@ class ClaudeCodeManager {
                     resolve(result);
                 }
             };
-            child.on('close', (code) => {
+            child.on('close', code => {
                 doResolve({ success: code === 0, stdout, stderr, code });
             });
             child.on('error', () => {

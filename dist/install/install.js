@@ -141,7 +141,7 @@ async function configureNpmUserPrefix() {
  * Runs a command and returns its output
  */
 function runCommand(command, args, options = {}) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         const child = (0, child_process_1.spawn)(command, args, {
             stdio: options.verbose ? 'inherit' : 'pipe',
             shell: true, // Ensure shell is available for proper command execution
@@ -149,14 +149,14 @@ function runCommand(command, args, options = {}) {
         let stdout = '';
         let stderr = '';
         if (!options.verbose) {
-            child.stdout?.on('data', (data) => {
+            child.stdout?.on('data', data => {
                 stdout += data.toString();
             });
-            child.stderr?.on('data', (data) => {
+            child.stderr?.on('data', data => {
                 stderr += data.toString();
             });
         }
-        child.on('close', (code) => {
+        child.on('close', code => {
             resolve({ success: code === 0, stdout, stderr, code });
         });
         child.on('error', () => {
@@ -213,7 +213,7 @@ function getPathValue() {
  */
 function isPathInPath(directory) {
     const normalizedDir = path_1.default.resolve(directory);
-    return getPathValue().some((p) => path_1.default.resolve(p) === normalizedDir);
+    return getPathValue().some(p => path_1.default.resolve(p) === normalizedDir);
 }
 /**
  * Adds a directory to PATH in shell config

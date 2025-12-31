@@ -24,18 +24,18 @@ class ApiClient {
     }
     setupInterceptors() {
         // Request interceptor
-        this.axios.interceptors.request.use((config) => {
+        this.axios.interceptors.request.use(config => {
             console.debug(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
             return config;
-        }, (error) => {
+        }, error => {
             console.error('API Request Error:', error);
             return Promise.reject(error);
         });
         // Response interceptor
-        this.axios.interceptors.response.use((response) => {
+        this.axios.interceptors.response.use(response => {
             console.debug(`API Response: ${response.status} ${response.statusText}`);
             return response;
-        }, (error) => {
+        }, error => {
             if (axios_1.default.isAxiosError(error)) {
                 if (error.response) {
                     console.error(`API Error Response: ${error.response.status} ${error.response.statusText}`);

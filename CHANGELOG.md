@@ -11,9 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `info()` function to install script for always-visible progress messages
 - Added explicit progress indicators for dependency installation steps
 - Added better error handling and tolerance for cleanup operations
+- Added `compareVersions()` function for proper semver comparison
+- Added `getLatestGitHubVersion()` to check GitHub releases directly
+- Added update command protection against downgrading to older versions
 
 ### Changed
-- **BREAKING:** Updated TypeScript `moduleResolution` from `"node"` to keep CommonJS compatibility
+- Update command now checks GitHub repository instead of npm registry
+- Update command only proceeds if newer version is available
 - Updated tarball URL in install script to use direct codeload URL (fixes download issues)
 - Updated all production dependencies to latest versions:
   - `axios`: 1.12.2 → 1.13.2
@@ -36,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed js-yaml security vulnerability via npm audit fix
 - Fixed install script cleanup function causing premature exit with `set -e`
 - Fixed verification step to warn instead of exit on help command failure
+- Fixed update command downgrading to older versions (now checks GitHub releases)
 
 ### Security
 - Resolved moderate security vulnerability in `js-yaml` (CVE GHSA-mh29-5h37-fv8m)

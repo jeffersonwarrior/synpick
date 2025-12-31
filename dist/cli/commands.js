@@ -23,13 +23,25 @@ function createProgram() {
         .allowUnknownOption(true)
         .passThroughOptions(true);
     // Main command (launch Claude Code)
-    program
-        .action(async (options, command) => {
+    program.action(async (_options, _command) => {
         const app = new app_1.SyntheticClaudeApp();
         // Get all raw args from process.argv and extract unknown options
         const rawArgs = process.argv.slice(2);
         const additionalArgs = [];
-        const knownFlags = new Set(['--model', '--thinking-model', '--verbose', '--quiet', '--help', '--version', '-m', '-t', '-v', '-q', '-h', '-V']);
+        const knownFlags = new Set([
+            '--model',
+            '--thinking-model',
+            '--verbose',
+            '--quiet',
+            '--help',
+            '--version',
+            '-m',
+            '-t',
+            '-v',
+            '-q',
+            '-h',
+            '-V',
+        ]);
         for (let i = 0; i < rawArgs.length; i++) {
             const arg = rawArgs[i];
             if (arg && arg.startsWith('--')) {
@@ -38,7 +50,10 @@ function createProgram() {
                 if (!knownFlags.has(flagName) && !knownFlags.has(arg)) {
                     additionalArgs.push(arg);
                     // If this is a flag that takes a value and it's not in --flag=value format, skip the next arg
-                    if (!arg.includes('=') && i + 1 < rawArgs.length && rawArgs[i + 1] && !rawArgs[i + 1].startsWith('-')) {
+                    if (!arg.includes('=') &&
+                        i + 1 < rawArgs.length &&
+                        rawArgs[i + 1] &&
+                        !rawArgs[i + 1].startsWith('-')) {
                         additionalArgs.push(rawArgs[i + 1]);
                         i++; // Skip the next argument as it's a value
                     }
@@ -47,7 +62,7 @@ function createProgram() {
         }
         // Normalize dangerous flags
         const normalizedArgs = (0, banner_1.normalizeDangerousFlags)(additionalArgs);
-        await app.run({ ...options, additionalArgs: normalizedArgs });
+        await app.run({ ..._options, additionalArgs: normalizedArgs });
     });
     // Model selection command (launches after selection)
     program
@@ -64,7 +79,7 @@ function createProgram() {
             await app.run({
                 verbose: options.verbose,
                 quiet: options.quiet,
-                model: '' // Will use saved models from config
+                model: '', // Will use saved models from config
             });
         }
     });
@@ -73,7 +88,7 @@ function createProgram() {
         .command('thinking-model')
         .description('Interactive thinking model selection and save to config')
         .option('-v, --verbose', 'Enable verbose logging')
-        .action(async (options) => {
+        .action(async (_options) => {
         const app = new app_1.SyntheticClaudeApp();
         await app.interactiveThinkingModelSelection();
     });
@@ -96,9 +111,7 @@ function createProgram() {
         await app.searchModels(query, options);
     });
     // Configuration commands
-    const configCmd = program
-        .command('config')
-        .description('Manage configuration');
+    const configCmd = program.command('config').description('Manage configuration');
     configCmd
         .command('show')
         .description('Show current configuration')
@@ -173,7 +186,7 @@ function createProgram() {
                 verbose: options.verbose,
                 quiet: options.quiet,
                 model: '', // Will use saved models from config
-                additionalArgs: ['--dangerously-skip-permissions']
+                additionalArgs: ['--dangerously-skip-permissions'],
             });
         }
         else {
@@ -186,15 +199,13 @@ function createProgram() {
                     verbose: options.verbose,
                     quiet: options.quiet,
                     model: '', // Will use saved models from config
-                    additionalArgs: ['--dangerously-skip-permissions']
+                    additionalArgs: ['--dangerously-skip-permissions'],
                 });
             }
         }
     });
     // Cache management
-    const cacheCmd = program
-        .command('cache')
-        .description('Manage model cache');
+    const cacheCmd = program.command('cache').description('Manage model cache');
     cacheCmd
         .command('clear')
         .description('Clear model cache')

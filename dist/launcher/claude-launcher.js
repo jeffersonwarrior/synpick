@@ -16,10 +16,8 @@ class ClaudeLauncher {
                 ...options.env,
             };
             // Prepare command arguments
-            const args = [
-                ...(options.additionalArgs || []),
-            ];
-            return new Promise((resolve) => {
+            const args = [...(options.additionalArgs || [])];
+            return new Promise(resolve => {
                 const child = (0, child_process_1.spawn)(this.claudePath, args, {
                     stdio: 'inherit',
                     env,
@@ -31,7 +29,7 @@ class ClaudeLauncher {
                         pid: child.pid || undefined,
                     });
                 });
-                child.on('error', (error) => {
+                child.on('error', error => {
                     console.error(`Failed to launch Claude Code: ${error.message}`);
                     resolve({
                         success: false,
@@ -75,7 +73,7 @@ class ClaudeLauncher {
         return env;
     }
     async checkClaudeInstallation() {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             const child = (0, child_process_1.spawn)(this.claudePath, ['--version'], {
                 stdio: 'pipe',
             });
@@ -90,16 +88,16 @@ class ClaudeLauncher {
         });
     }
     async getClaudeVersion() {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             const child = (0, child_process_1.spawn)(this.claudePath, ['--version'], {
                 stdio: 'pipe',
             });
             let output = '';
             let resolved = false;
-            child.stdout?.on('data', (data) => {
+            child.stdout?.on('data', data => {
                 output += data.toString();
             });
-            child.on('close', (code) => {
+            child.on('close', code => {
                 if (!resolved && code === 0) {
                     resolved = true;
                     // Parse version from output like "claude 2.0.76" or "2.0.76"

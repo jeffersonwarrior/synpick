@@ -19,7 +19,9 @@ class SyntheticClaudeApp {
     constructor() {
         this.configManager = new config_1.ConfigManager();
         this.ui = new ui_1.UserInterface({
-            verbose: this.configManager.config.apiKey ? this.configManager.config.cacheDurationHours > 0 : false,
+            verbose: this.configManager.config.apiKey
+                ? this.configManager.config.cacheDurationHours > 0
+                : false,
         });
         this.launcher = new launcher_1.ClaudeLauncher();
         this.claudeCodeManager = new claude_1.ClaudeCodeManager();
@@ -109,8 +111,8 @@ class SyntheticClaudeApp {
         // Then update Claude Code
         this.ui.info('Checking for Claude Code updates...');
         // Check if Claude Code is installed via npm
-        const isNpmInstalled = await this.claudeCodeManager.getNpmInstalledVersion() !== null;
-        let updateInfo = await this.claudeCodeManager.checkForUpdates({ useActualVersion: true });
+        const isNpmInstalled = (await this.claudeCodeManager.getNpmInstalledVersion()) !== null;
+        const updateInfo = await this.claudeCodeManager.checkForUpdates({ useActualVersion: true });
         // Check if update is needed
         if (!force && !updateInfo.hasUpdate) {
             this.ui.info('Claude Code is already up to date');
@@ -131,9 +133,7 @@ class SyntheticClaudeApp {
                     this.ui.coloredSuccess(`Claude Code installed: ${result.newVersion}`);
                     break;
                 case 'updated':
-                    const prevMsg = result.previousVersion
-                        ? ` (was ${result.previousVersion})`
-                        : '';
+                    const prevMsg = result.previousVersion ? ` (was ${result.previousVersion})` : '';
                     this.ui.coloredSuccess(`Claude Code updated to ${result.newVersion}${prevMsg}`);
                     break;
                 case 'none':
@@ -466,7 +466,7 @@ class SyntheticClaudeApp {
         this.ui.success('Configuration reset to defaults');
     }
     async setup() {
-        this.ui.coloredInfo('Welcome to Synclaude! Let\'s set up your configuration.');
+        this.ui.coloredInfo("Welcome to Synclaude! Let's set up your configuration.");
         this.ui.info('==============================================');
         const config = this.configManager.config;
         // Get API key if not set
@@ -623,7 +623,9 @@ class SyntheticClaudeApp {
             if (force) {
                 this.ui.info('Step 2/3: Removing existing global installation...');
                 try {
-                    execSync('npm unlink -g synclaude 2>/dev/null || true', { stdio: verbose ? 'inherit' : 'pipe' });
+                    execSync('npm unlink -g synclaude 2>/dev/null || true', {
+                        stdio: verbose ? 'inherit' : 'pipe',
+                    });
                 }
                 catch {
                     // Ignore errors if not installed
@@ -660,7 +662,11 @@ class SyntheticClaudeApp {
                 this.ui.info('You may need to add it to your shell config or restart your terminal.');
             }
             this.ui.info('');
-            this.ui.highlightInfo('Getting started:', ['synclaude setup', 'synclaude model', 'synclaude']);
+            this.ui.highlightInfo('Getting started:', [
+                'synclaude setup',
+                'synclaude model',
+                'synclaude',
+            ]);
             this.ui.info('  synclaude setup    # First-time configuration');
             this.ui.info('  synclaude          # Launch Claude Code');
             this.ui.info('  synclaude --help   # Show all commands');

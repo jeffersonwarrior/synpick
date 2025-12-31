@@ -167,6 +167,9 @@ synclaude config reset
 # Check system health and configuration
 synclaude doctor
 
+# Update synclaude to latest version from GitHub
+synclaude update
+
 # Clear model cache
 synclaude cache clear
 
@@ -189,14 +192,37 @@ Synclaude stores configuration in `~/.config/synclaude/config.json`. Key options
 
 ### Updates
 
-Synclaude follows standard npm package management conventions. Instead of built-in auto-updates, you manage updates manually:
+Synclaude provides multiple ways to update:
+
+#### Automatic Update Command
 
 ```bash
+# Check for and install updates from GitHub
+synclaude update
+```
 
-# Update to latest version
+The update command:
+- Checks your GitHub repository for the latest release
+- Compares versions using semver (won't downgrade)
+- Runs the installer if a newer version is available
+- Only updates from official GitHub releases
+
+#### Manual Update via npm
+
+```bash
+# Update to latest version from npm registry
 npm update -g synclaude
 
-# Check current version
+# Install specific version
+npm install -g synclaude@1.6.0
+
+# Or reinstall from GitHub release
+npm install -g https://github.com/jeffersonwarrior/synclaude/releases/download/v1.6.0/synclaude-1.6.0.tgz
+```
+
+#### Check Current Version
+
+```bash
 synclaude --version
 ```
 

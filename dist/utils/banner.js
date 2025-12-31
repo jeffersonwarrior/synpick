@@ -19,7 +19,7 @@ function normalizeDangerousFlags(args) {
         /^--dangerously_skip_permissions$/, // underscores
         /^--dangerous(ly)?$/, // shortened
         /^--skip-permissions$/, // incomplete
-        /^--skip-permission$/ // incomplete + missing s
+        /^--skip-permission$/, // incomplete + missing s
     ];
     const processedArgs = args.map(arg => {
         if (typeof arg === 'string') {
@@ -60,7 +60,7 @@ function createBanner(options = {}) {
         `${chalk_1.default.magenta('Thinking:')}  ${chalk_1.default.magenta(thinkingModel)}`,
         `${chalk_1.default.green('Network:')}    ${chalk_1.default.green('Synthetic.New')}`,
         `${chalk_1.default.yellow('Options:')}    ${chalk_1.default.yellow(optionsStr)}`,
-        ''
+        '',
     ].join('\n');
 }
 //# sourceMappingURL=banner.js.map

@@ -15,23 +15,35 @@ exports.ModelInfoSchema = zod_1.z.object({
     output_modalities: zod_1.z.array(zod_1.z.string()).optional().describe('Supported output modalities'),
     context_length: zod_1.z.number().optional().describe('Context window size'),
     max_output_length: zod_1.z.number().optional().describe('Maximum output tokens'),
-    pricing: zod_1.z.object({
+    pricing: zod_1.z
+        .object({
         prompt: zod_1.z.string().optional(),
         completion: zod_1.z.string().optional(),
         image: zod_1.z.string().optional(),
         request: zod_1.z.string().optional(),
         input_cache_reads: zod_1.z.string().optional(),
         input_cache_writes: zod_1.z.string().optional(),
-    }).optional().describe('Pricing information'),
+    })
+        .optional()
+        .describe('Pricing information'),
     quantization: zod_1.z.string().optional().describe('Model quantization'),
-    supported_sampling_parameters: zod_1.z.array(zod_1.z.string()).optional().describe('Supported sampling parameters'),
+    supported_sampling_parameters: zod_1.z
+        .array(zod_1.z.string())
+        .optional()
+        .describe('Supported sampling parameters'),
     supported_features: zod_1.z.array(zod_1.z.string()).optional().describe('Supported features'),
-    openrouter: zod_1.z.object({
+    openrouter: zod_1.z
+        .object({
         slug: zod_1.z.string().optional(),
-    }).optional().describe('OpenRouter metadata'),
-    datacenters: zod_1.z.array(zod_1.z.object({
+    })
+        .optional()
+        .describe('OpenRouter metadata'),
+    datacenters: zod_1.z
+        .array(zod_1.z.object({
         country_code: zod_1.z.string().optional(),
-    })).optional().describe('Available datacenters'),
+    }))
+        .optional()
+        .describe('Available datacenters'),
 });
 class ModelValidationError extends Error {
     cause;

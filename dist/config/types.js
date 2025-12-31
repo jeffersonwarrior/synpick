@@ -5,13 +5,16 @@ const zod_1 = require("zod");
 exports.AppConfigSchema = zod_1.z.object({
     apiKey: zod_1.z.string().default('').describe('Synthetic API key'),
     baseUrl: zod_1.z.string().default('https://api.synthetic.new').describe('Synthetic API base URL'),
-    anthropicBaseUrl: zod_1.z.string()
+    anthropicBaseUrl: zod_1.z
+        .string()
         .default('https://api.synthetic.new/anthropic')
         .describe('Anthropic-compatible API endpoint'),
-    modelsApiUrl: zod_1.z.string()
+    modelsApiUrl: zod_1.z
+        .string()
         .default('https://api.synthetic.new/openai/v1/models')
         .describe('OpenAI-compatible models endpoint'),
-    cacheDurationHours: zod_1.z.number()
+    cacheDurationHours: zod_1.z
+        .number()
         .int()
         .min(1)
         .max(168)
@@ -19,20 +22,27 @@ exports.AppConfigSchema = zod_1.z.object({
         .describe('Model cache duration in hours'),
     selectedModel: zod_1.z.string().default('').describe('Last selected model'),
     selectedThinkingModel: zod_1.z.string().default('').describe('Last selected thinking model'),
-    firstRunCompleted: zod_1.z.boolean()
+    firstRunCompleted: zod_1.z
+        .boolean()
         .default(false)
         .describe('Whether first-time setup has been completed'),
-    autoUpdateClaudeCode: zod_1.z.boolean()
+    autoUpdateClaudeCode: zod_1.z
+        .boolean()
         .default(true)
         .describe('Whether to automatically check for Claude Code updates'),
-    claudeCodeUpdateCheckInterval: zod_1.z.number()
+    claudeCodeUpdateCheckInterval: zod_1.z
+        .number()
         .int()
         .min(1)
         .max(720)
         .default(24)
         .describe('Hours between Claude Code update checks'),
-    lastClaudeCodeUpdateCheck: zod_1.z.string().optional().describe('Last Claude Code update check timestamp (ISO 8601)'),
-    maxTokenSize: zod_1.z.number()
+    lastClaudeCodeUpdateCheck: zod_1.z
+        .string()
+        .optional()
+        .describe('Last Claude Code update check timestamp (ISO 8601)'),
+    maxTokenSize: zod_1.z
+        .number()
         .int()
         .min(1000)
         .max(200000)
