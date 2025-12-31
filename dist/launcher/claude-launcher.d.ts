@@ -4,6 +4,7 @@ export interface LaunchOptions {
     additionalArgs?: string[];
     env?: Record<string, string>;
     thinkingModel?: string | null;
+    maxTokenSize?: number;
 }
 export interface LaunchResult {
     success: boolean;

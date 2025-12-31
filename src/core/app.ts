@@ -7,6 +7,7 @@ import { ClaudeLauncher, LaunchOptions } from '../launcher';
 import { ModelInfoImpl } from '../models';
 import { setupLogging, log } from '../utils/logger';
 import { createBanner, normalizeDangerousFlags } from '../utils/banner';
+import { ClaudeCodeManager, ClaudeCodeManager as ClaudeCodeManagerClass } from '../claude';
 
 export interface AppOptions {
   verbose?: boolean;
@@ -21,6 +22,7 @@ export class SyntheticClaudeApp {
   private ui: UserInterface;
   private launcher: ClaudeLauncher;
   private modelManager: ModelManager | null = null;
+  private claudeCodeManager: ClaudeCodeManagerClass;
 
   constructor() {
     this.configManager = new ConfigManager();
@@ -28,6 +30,7 @@ export class SyntheticClaudeApp {
       verbose: this.configManager.config.apiKey ? this.configManager.config.cacheDurationHours > 0 : false,
     });
     this.launcher = new ClaudeLauncher();
+    this.claudeCodeManager = new ClaudeCodeManager();
   }
 
   async setupLogging(options: AppOptions): Promise<void> {
@@ -68,8 +71,8 @@ export class SyntheticClaudeApp {
       console.log(createBanner(options));
     }
 
-    // Note: Updates are now handled manually by users via `npm update -g synclaude`
-    // This eliminates complex update checking and related bugs
+    // Check for Claude Code updates if enabled
+    await this.ensureClaudeCodeUpdated();
 
     // Handle first-time setup
     if (this.configManager.isFirstRun()) {
@@ -89,6 +92,164 @@ export class SyntheticClaudeApp {
 
     // Launch Claude Code
     await this.launchClaudeCode(model, options, thinkingModel);
+  }
+
+  /**
+   * Check and update Claude Code if needed
+   * Skips if autoupdate is disabled or if it hasn't been long enough since last check
+   */
+  async ensureClaudeCodeUpdated(): Promise<void> {
+    const config = this.configManager.config;
+
+    // Check if auto-update is enabled
+    if (!config.autoUpdateClaudeCode) {
+      return;
+    }
+
+    // Check if we should run an update check based on interval
+    const shouldCheck = this.claudeCodeManager.shouldCheckUpdate(
+      config.lastClaudeCodeUpdateCheck,
+      config.claudeCodeUpdateCheckInterval
+    );
+
+    if (!shouldCheck) {
+      return;
+    }
+
+    // Perform the update check
+    const updateInfo = await this.claudeCodeManager.checkForUpdates();
+
+    // Update the last check timestamp
+    await this.configManager.updateConfig({
+      lastClaudeCodeUpdateCheck: ClaudeCodeManager.getCurrentTimestamp(),
+    });
+
+    // Show update message if available
+    if (updateInfo.hasUpdate && updateInfo.isNpmInstalled) {
+      this.ui.info(`\nNew version of Claude Code available: ${updateInfo.latestVersion}`);
+      this.ui.info(`Current version: ${updateInfo.currentVersion || 'Not installed'}`);
+      this.ui.info('Run "synclaude update" to update Claude Code\n');
+    }
+  }
+
+  /**
+   * Update synclaude and Claude Code to the latest version
+   */
+  async updateClaudeCode(force: boolean = false): Promise<void> {
+    // Update synclaude itself first
+    await this.updateSynclaudeSelf(force);
+
+    // Then update Claude Code
+    this.ui.info('Checking for Claude Code updates...');
+
+    // Check if Claude Code is installed via npm
+    const isNpmInstalled = await this.claudeCodeManager.getNpmInstalledVersion() !== null;
+    let updateInfo = await this.claudeCodeManager.checkForUpdates({ useActualVersion: true });
+
+    // Check if update is needed
+    if (!force && !updateInfo.hasUpdate) {
+      this.ui.info('Claude Code is already up to date');
+      return;
+    }
+
+    let result;
+    if (isNpmInstalled) {
+      // Use npm update
+      result = await this.claudeCodeManager.installOrUpdate({ force });
+    } else {
+      // Use official installer
+      result = await this.claudeCodeManager.runOfficialInstaller();
+    }
+
+    if (result.success) {
+      switch (result.action) {
+        case 'installed':
+          this.ui.coloredSuccess(`Claude Code installed: ${result.newVersion}`);
+          break;
+        case 'updated':
+          const prevMsg = result.previousVersion
+            ? ` (was ${result.previousVersion})`
+            : '';
+          this.ui.coloredSuccess(`Claude Code updated to ${result.newVersion}${prevMsg}`);
+          break;
+        case 'none':
+          this.ui.info('Claude Code is already up to date');
+          break;
+      }
+    } else {
+      this.ui.error(`Failed to update Claude Code: ${result.error}`);
+    }
+  }
+
+  /**
+   * Update synclaude itself via npm
+   */
+  private async updateSynclaudeSelf(force: boolean = false): Promise<void> {
+    const { execSync } = require('child_process');
+
+    try {
+      // Get current synclaude version
+      const currentVersion = execSync('synclaude --version', { encoding: 'utf-8' }).trim();
+      this.ui.info(`Current synclaude version: ${currentVersion}`);
+
+      this.ui.info('Checking for synclaude updates...');
+
+      // Check for latest version from npm
+      const latestVersion = execSync('npm view synclaude version', { encoding: 'utf-8' }).trim();
+      this.ui.info(`Latest synclaude version: ${latestVersion}`);
+
+      if (currentVersion === latestVersion && !force) {
+        this.ui.info('Synclaude is already up to date');
+        return;
+      }
+
+      // Update synclaude via npm
+      this.ui.info('Updating synclaude...');
+      execSync('npm update -g synclaude', { stdio: 'pipe' });
+
+      // Verify the update
+      const newVersion = execSync('synclaude --version', { encoding: 'utf-8' }).trim();
+
+      if (newVersion === latestVersion || force) {
+        const prevMsg = currentVersion !== newVersion ? ` (was ${currentVersion})` : '';
+        this.ui.coloredSuccess(`Synclaude updated to ${newVersion}${prevMsg}`);
+      } else {
+        this.ui.info(`Synclaude is now ${newVersion}, latest available is ${latestVersion}`);
+      }
+    } catch (error) {
+      this.ui.error(`Failed to update synclaude: ${error instanceof Error ? error.message : String(error)}`);
+      // Don't exit - continue to try updating Claude Code
+    }
+  }
+
+  /**
+   * Check if there are available updates without installing
+   */
+  async checkForUpdates(): Promise<void> {
+    this.ui.info('Checking for Claude Code updates...');
+
+    const updateInfo = await this.claudeCodeManager.checkForUpdates({ useActualVersion: true });
+
+    if (!updateInfo.currentVersion && !updateInfo.latestVersion) {
+      this.ui.error('Could not check for updates. Make sure npm is configured correctly.');
+      return;
+    }
+
+    this.ui.info(`Current version: ${updateInfo.currentVersion || 'Not installed'}`);
+    this.ui.info(`Latest version: ${updateInfo.latestVersion || 'Unknown'}`);
+
+    if (updateInfo.isNpmInstalled) {
+      if (updateInfo.hasUpdate) {
+        this.ui.coloredSuccess('\nUpdate available!');
+        this.ui.info('Run "synclaude update" to update Claude Code\n');
+      } else {
+        this.ui.info('\nClaude Code is up to date\n');
+      }
+    } else {
+      this.ui.info('\nNote: Claude Code was not installed via npm.');
+      this.ui.info('To update, run: curl -fsSL https://claude.ai/install.sh | bash');
+      this.ui.info('Or reinstall using the method you originally used.\n');
+    }
   }
 
   async interactiveModelSelection(): Promise<boolean> {
@@ -227,6 +388,9 @@ export class SyntheticClaudeApp {
     this.ui.info(`Selected Model: ${config.selectedModel || 'None'}`);
     this.ui.info(`Selected Thinking Model: ${config.selectedThinkingModel || 'None'}`);
     this.ui.info(`First Run Completed: ${config.firstRunCompleted}`);
+    this.ui.info(`Auto-update Claude Code: ${config.autoUpdateClaudeCode ? 'Yes' : 'No'}`);
+    this.ui.info(`Update Check Interval: ${config.claudeCodeUpdateCheckInterval} hours`);
+    this.ui.info(`Max Token Size: ${config.maxTokenSize}`);
   }
 
   async setConfig(key: string, value: string): Promise<void> {
@@ -251,6 +415,15 @@ export class SyntheticClaudeApp {
         break;
       case 'selectedThinkingModel':
         updates.selectedThinkingModel = value;
+        break;
+      case 'autoUpdateClaudeCode':
+        updates.autoUpdateClaudeCode = value.toLowerCase() === 'true' || value === '1';
+        break;
+      case 'claudeCodeUpdateCheckInterval':
+        updates.claudeCodeUpdateCheckInterval = parseInt(value, 10);
+        break;
+      case 'maxTokenSize':
+        updates.maxTokenSize = parseInt(value, 10);
         break;
       default:
         this.ui.error(`Unknown configuration key: ${key}`);
@@ -343,6 +516,19 @@ export class SyntheticClaudeApp {
       if (version) {
         this.ui.info(`Claude Code version: ${version}`);
       }
+
+      // Check for updates
+      const updateInfo = await this.claudeCodeManager.checkForUpdates({ useActualVersion: true });
+      if (updateInfo.isNpmInstalled) {
+        if (updateInfo.hasUpdate) {
+          this.ui.showStatus('warning', `Update available: ${updateInfo.currentVersion} -> ${updateInfo.latestVersion}`);
+          this.ui.info('Run "synclaude update" to update Claude Code');
+        } else if (updateInfo.currentVersion) {
+          this.ui.showStatus('success', `Claude Code is up to date (${updateInfo.currentVersion})`);
+        }
+      } else {
+        this.ui.info('Claude Code is not installed via npm - use your original install method to update');
+      }
     }
 
     // Check configuration
@@ -360,8 +546,10 @@ export class SyntheticClaudeApp {
       }
     }
 
-    // Note: Manual updates via `npm update -g synclaude`
-    this.ui.info('To check for updates, run: npm update -g synclaude');
+    // Configuration summary
+    const config = this.configManager.config;
+    this.ui.info(`Auto-update Claude Code: ${config.autoUpdateClaudeCode ? 'Enabled' : 'Disabled'}`);
+    this.ui.info(`Max Token Size: ${config.maxTokenSize}`);
   }
 
   async clearCache(): Promise<void> {
@@ -420,6 +608,88 @@ export class SyntheticClaudeApp {
     return null; // Thinking model is optional
   }
 
+  /**
+   * Install synclaude from local directory to system-wide
+   * Builds the project and uses npm link -g for system-wide installation
+   */
+  async localInstall(options: { verbose?: boolean; force?: boolean; skipPath?: boolean }): Promise<void> {
+    const { verbose = false, force = false, skipPath = false } = options;
+    const { execSync, spawn } = require('child_process');
+
+    this.ui.coloredInfo('Installing synclaude from local directory to system-wide...');
+    this.ui.info('==================================================');
+
+    try {
+      // Step 1: Build the project
+      this.ui.info('Step 1/3: Building project...');
+      if (verbose) {
+        execSync('npm run build', { stdio: 'inherit', cwd: process.cwd() });
+      } else {
+        execSync('npm run build', { stdio: 'pipe', cwd: process.cwd() });
+      }
+      this.ui.coloredSuccess('Build completed');
+
+      // Step 2: Unlink existing global installation if force is set
+      if (force) {
+        this.ui.info('Step 2/3: Removing existing global installation...');
+        try {
+          execSync('npm unlink -g synclaude 2>/dev/null || true', { stdio: verbose ? 'inherit' : 'pipe' });
+        } catch {
+          // Ignore errors if not installed
+        }
+        this.ui.coloredSuccess('Existing installation removed');
+      }
+
+      // Step 3: Link globally (npm link is now global by default in npm 11+)
+      this.ui.info(`Step ${force ? '3' : '2'}/3: Linking globally...`);
+      if (verbose) {
+        execSync('npm link', { stdio: 'inherit', cwd: process.cwd() });
+      } else {
+        execSync('npm link', { stdio: 'pipe', cwd: process.cwd() });
+      }
+
+      // Verify installation
+      this.ui.info('Verifying installation...');
+      const version = execSync('synclaude --version', { encoding: 'utf-8' }).trim();
+      this.ui.coloredSuccess(`synclaude v${version} installed successfully!`);
+
+      // Show installation details
+      // Use npm prefix to get global directory (npm bin -g is deprecated)
+      const npmPrefix = execSync('npm config get prefix', { encoding: 'utf-8' }).trim();
+      const npmBin = `${npmPrefix}/bin`;
+      const commandPath = execSync('which synclaude', { encoding: 'utf-8' }).trim();
+
+      this.ui.info('');
+      this.ui.info('Installation details:');
+      this.ui.info(`  Version: ${version}`);
+      this.ui.info(`  Location: ${commandPath}`);
+      this.ui.info(`  npm bin dir: ${npmBin}`);
+
+      // Check PATH
+      const pathDirs = (process.env.PATH || '').split(':');
+      if (!pathDirs.some(dir => dir === npmBin) && !skipPath) {
+        this.ui.info('');
+        this.ui.showStatus('warning', `Note: ${npmBin} is not in your PATH`);
+        this.ui.info('You may need to add it to your shell config or restart your terminal.');
+      }
+
+      this.ui.info('');
+      this.ui.highlightInfo('Getting started:', ['synclaude setup', 'synclaude model', 'synclaude']);
+      this.ui.info('  synclaude setup    # First-time configuration');
+      this.ui.info('  synclaude          # Launch Claude Code');
+      this.ui.info('  synclaude --help   # Show all commands');
+
+    } catch (error) {
+      this.ui.error(`Installation failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.ui.info('');
+      this.ui.info('Troubleshooting tips:');
+      this.ui.info('1. Ensure you have write permissions for npm global install');
+      this.ui.info('2. Try running with --verbose flag to see detailed output');
+      this.ui.info('3. Make sure Node.js >= 18 and npm 11+ are installed');
+      throw error;
+    }
+  }
+
   private async launchClaudeCode(model: string, options: LaunchOptions, thinkingModel?: string | null): Promise<void> {
     const launchInfo = thinkingModel
       ? `Launching with ${model} (thinking: ${thinkingModel}). Use "synclaude model" to change model.`
@@ -431,6 +701,7 @@ export class SyntheticClaudeApp {
       model,
       thinkingModel,
       additionalArgs: options.additionalArgs,
+      maxTokenSize: this.configManager.config.maxTokenSize,
       env: {
         ANTHROPIC_AUTH_TOKEN: this.configManager.getApiKey(),
       },

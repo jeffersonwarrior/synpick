@@ -22,6 +22,22 @@ exports.AppConfigSchema = zod_1.z.object({
     firstRunCompleted: zod_1.z.boolean()
         .default(false)
         .describe('Whether first-time setup has been completed'),
+    autoUpdateClaudeCode: zod_1.z.boolean()
+        .default(true)
+        .describe('Whether to automatically check for Claude Code updates'),
+    claudeCodeUpdateCheckInterval: zod_1.z.number()
+        .int()
+        .min(1)
+        .max(720)
+        .default(24)
+        .describe('Hours between Claude Code update checks'),
+    lastClaudeCodeUpdateCheck: zod_1.z.string().optional().describe('Last Claude Code update check timestamp (ISO 8601)'),
+    maxTokenSize: zod_1.z.number()
+        .int()
+        .min(1000)
+        .max(200000)
+        .default(128000)
+        .describe('Max token size for Claude Code context window'),
 });
 class ConfigValidationError extends Error {
     cause;

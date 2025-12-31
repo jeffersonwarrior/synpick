@@ -8,25 +8,11 @@ export declare const AppConfigSchema: z.ZodObject<{
     selectedModel: z.ZodDefault<z.ZodString>;
     selectedThinkingModel: z.ZodDefault<z.ZodString>;
     firstRunCompleted: z.ZodDefault<z.ZodBoolean>;
-}, "strip", z.ZodTypeAny, {
-    apiKey: string;
-    baseUrl: string;
-    anthropicBaseUrl: string;
-    modelsApiUrl: string;
-    cacheDurationHours: number;
-    selectedModel: string;
-    selectedThinkingModel: string;
-    firstRunCompleted: boolean;
-}, {
-    apiKey?: string | undefined;
-    baseUrl?: string | undefined;
-    anthropicBaseUrl?: string | undefined;
-    modelsApiUrl?: string | undefined;
-    cacheDurationHours?: number | undefined;
-    selectedModel?: string | undefined;
-    selectedThinkingModel?: string | undefined;
-    firstRunCompleted?: boolean | undefined;
-}>;
+    autoUpdateClaudeCode: z.ZodDefault<z.ZodBoolean>;
+    claudeCodeUpdateCheckInterval: z.ZodDefault<z.ZodNumber>;
+    lastClaudeCodeUpdateCheck: z.ZodOptional<z.ZodString>;
+    maxTokenSize: z.ZodDefault<z.ZodNumber>;
+}, z.core.$strip>;
 export type AppConfig = z.infer<typeof AppConfigSchema>;
 export declare class ConfigValidationError extends Error {
     cause?: unknown | undefined;

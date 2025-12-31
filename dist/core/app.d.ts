@@ -10,6 +10,7 @@ export declare class SyntheticClaudeApp {
     private ui;
     private launcher;
     private modelManager;
+    private claudeCodeManager;
     constructor();
     setupLogging(options: AppOptions): Promise<void>;
     getConfig(): {
@@ -21,9 +22,30 @@ export declare class SyntheticClaudeApp {
         selectedModel: string;
         selectedThinkingModel: string;
         firstRunCompleted: boolean;
+        autoUpdateClaudeCode: boolean;
+        claudeCodeUpdateCheckInterval: number;
+        maxTokenSize: number;
+        lastClaudeCodeUpdateCheck?: string | undefined;
     };
     private getModelManager;
     run(options: AppOptions & LaunchOptions): Promise<void>;
+    /**
+     * Check and update Claude Code if needed
+     * Skips if autoupdate is disabled or if it hasn't been long enough since last check
+     */
+    ensureClaudeCodeUpdated(): Promise<void>;
+    /**
+     * Update synclaude and Claude Code to the latest version
+     */
+    updateClaudeCode(force?: boolean): Promise<void>;
+    /**
+     * Update synclaude itself via npm
+     */
+    private updateSynclaudeSelf;
+    /**
+     * Check if there are available updates without installing
+     */
+    checkForUpdates(): Promise<void>;
     interactiveModelSelection(): Promise<boolean>;
     interactiveThinkingModelSelection(): Promise<boolean>;
     listModels(options: {
@@ -41,6 +63,15 @@ export declare class SyntheticClaudeApp {
     cacheInfo(): Promise<void>;
     private selectModel;
     private selectThinkingModel;
+    /**
+     * Install synclaude from local directory to system-wide
+     * Builds the project and uses npm link -g for system-wide installation
+     */
+    localInstall(options: {
+        verbose?: boolean;
+        force?: boolean;
+        skipPath?: boolean;
+    }): Promise<void>;
     private launchClaudeCode;
 }
 //# sourceMappingURL=app.d.ts.map

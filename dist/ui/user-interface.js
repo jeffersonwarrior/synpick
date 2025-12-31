@@ -9,6 +9,29 @@ const ink_1 = require("ink");
 const chalk_1 = __importDefault(require("chalk"));
 const ModelSelector_1 = require("./components/ModelSelector");
 const StatusMessage_1 = require("./components/StatusMessage");
+// Helper function to identify thinking-capable models
+function isThinkingModel(modelId) {
+    const id = modelId.toLowerCase();
+    // Direct "thinking" keyword
+    if (id.includes('thinking'))
+        return true;
+    // Known thinking model patterns
+    if (id.includes('minimax') && (id.includes('2') || id.includes('3')))
+        return true;
+    if (id.includes('deepseek-r1') || id.includes('deepseek-r2') || id.includes('deepseek-r3'))
+        return true;
+    if (id.includes('deepseek') && (id.includes('3.2') || id.includes('3-2')))
+        return true;
+    if (id.includes('qwq'))
+        return true;
+    if (id.includes('o1'))
+        return true; // OpenAI o1 series
+    if (id.includes('o3'))
+        return true; // OpenAI o3 series
+    if (id.includes('qwen3'))
+        return true; // Qwen 3 thinking variants
+    return false;
+}
 class UserInterface {
     verbose;
     quiet;
@@ -76,11 +99,18 @@ class UserInterface {
         console.log('================');
         models.forEach((model, index) => {
             const marker = selectedIndex === index ? '➤' : ' ';
-            console.log(`${marker} ${index + 1}. ${model.getDisplayName()}`);
-            console.log(`    Provider: ${model.getProvider()}`);
-            if (model.owned_by) {
-                console.log(`    Owner: ${model.owned_by}`);
+            const displayName = model.getDisplayName();
+            const thoughtsuffix = isThinkingModel(model.id) ? ' ' + chalk_1.default.yellow('🤔 Thinking') : '';
+            console.log(`${marker} ${index + 1}. ${chalk_1.default.cyan(displayName)}${thoughtsuffix}`);
+            console.log(`    ${chalk_1.default.gray('Provider:')} ${model.getProvider()}`);
+            if (model.context_length) {
+                const contextK = Math.round(model.context_length / 1024);
+                console.log(`    ${chalk_1.default.gray('Context:')} ${contextK}K tokens`);
             }
+            if (model.quantization) {
+                console.log(`    ${chalk_1.default.gray('Quantization:')} ${model.quantization}`);
+            }
+            console.log(`    ${chalk_1.default.gray('ID:')} ${model.id}`);
             console.log('');
         });
     }

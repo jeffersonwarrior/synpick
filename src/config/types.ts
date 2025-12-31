@@ -20,6 +20,22 @@ export const AppConfigSchema = z.object({
   firstRunCompleted: z.boolean()
     .default(false)
     .describe('Whether first-time setup has been completed'),
+  autoUpdateClaudeCode: z.boolean()
+    .default(true)
+    .describe('Whether to automatically check for Claude Code updates'),
+  claudeCodeUpdateCheckInterval: z.number()
+    .int()
+    .min(1)
+    .max(720)
+    .default(24)
+    .describe('Hours between Claude Code update checks'),
+  lastClaudeCodeUpdateCheck: z.string().optional().describe('Last Claude Code update check timestamp (ISO 8601)'),
+  maxTokenSize: z.number()
+    .int()
+    .min(1000)
+    .max(200000)
+    .default(128000)
+    .describe('Max token size for Claude Code context window'),
 });
 
 export type AppConfig = z.infer<typeof AppConfigSchema>;

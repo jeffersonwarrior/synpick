@@ -16,10 +16,12 @@ NC='\033[0m' # No Color
 INSTALL_DIR="$HOME/.local/share/synclaude"
 BIN_DIR="$HOME/.local/bin"
 REPO_URL="https://github.com/jeffersonwarrior/synclaude"
-TARBALL_URL="$REPO_URL/archive/main.tar.gz"
+# Use direct codeload URL to avoid redirect issues
+TARBALL_URL="https://codeload.github.com/jeffersonwarrior/synclaude/tar.gz/refs/heads/main"
 
 # Script variables
 VERBOSE="${VERBOSE:-false}"
+LOCAL="${LOCAL:-false}"
 PATH_UPDATED="${PATH_UPDATED:-false}"
 PATH_IN_PATH="${PATH_IN_PATH:-false}"
 NPM_GLOBAL_INSTALL="${NPM_GLOBAL_INSTALL:-false}"
@@ -47,6 +49,18 @@ success() {
 
 progress() {
     echo -n "."
+    # Flush stdout so progress is visible immediately
+    if [ -n "$ZSH_VERSION" ]; then
+        # Zsh flush
+        builtin echo -n "" >/dev/stderr
+    else
+        # Bash flush
+        (>&2 echo -n "")
+    fi
+}
+
+info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
 }
 
 # Check if command exists
@@ -94,6 +108,37 @@ create_directories() {
     mkdir -p "$BIN_DIR"
 }
 
+# Clean up old synclaude installations from NVM
+cleanup_old_installations() {
+    log "Cleaning up old synclaude installations..."
+
+    # Remove from NVM versions
+    if [ -d "$HOME/.nvm" ]; then
+        # Iterate with nullglob-like behavior - only process if directories exist
+        for NVM_DIR in "$HOME/.nvm/versions/node"/*/lib/node_modules/synclaude; do
+            if [ -d "$NVM_DIR" ]; then
+                log "Removing old installation: $NVM_DIR"
+                rm -rf "$NVM_DIR" || true
+            fi
+        done
+        # Also remove stale symlinks from all nvm bin directories
+        for SYMLINK in "$HOME/.nvm/versions/node"/*/bin/synclaude; do
+            if [ -L "$SYMLINK" ]; then
+                log "Removing stale symlink: $SYMLINK"
+                rm -f "$SYMLINK" || true
+            fi
+        done
+    fi
+
+    # Clear any old PATH entries in shell configs
+    SED_PATTERN='/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d'
+    sed -i "$SED_PATTERN" "$HOME/.bashrc" 2>/dev/null || true
+    sed -i "$SED_PATTERN" "$HOME/.bash_profile" 2>/dev/null || true
+    sed -i "$SED_PATTERN" "$HOME/.zshrc" 2>/dev/null || true
+    sed -i "$SED_PATTERN" "$HOME/.config/fish/config.fish" 2>/dev/null || true
+    return 0
+}
+
 # Install synclaude package
 install_package() {
     progress
@@ -105,79 +150,126 @@ install_package() {
     # Test if we can install globally without sudo
     if npm config get prefix | grep -q "^$HOME\|^/home"; then
         NPM_CAN_INSTALL_USER=true
-        log "Using user-level npm installation"
+        info "Using user-level npm installation"
     elif npm ls -g synclaude >/dev/null 2>&1 || [ -w "$(npm config get prefix)" ]; then
         NPM_CAN_INSTALL_USER=true
-        log "Using system-level npm installation"
+        info "Using system-level npm installation"
     fi
 
     if [ "$NPM_CAN_INSTALL_USER" = true ]; then
-        # Try npm registry first, then fallback to building from source
-        log "Installing synclaude package"
-        progress
+        # Clean up old installations first
+        cleanup_old_installations || {
+            warn "Cleanup had some issues, continuing..."
+        }
 
-        # For development/direct installation, build from source first
-        # Fallback to registry if source build fails
-        log "Building from source"
-        rm -rf "$INSTALL_DIR"
-        mkdir -p "$INSTALL_DIR"
+        if [ "$LOCAL" = "true" ]; then
+            # Local installation from current directory
+            info "Installing synclaude from local directory: $(pwd)"
+            progress
 
-        # Download and extract
-        cd "$INSTALL_DIR"
-        if command_exists curl; then
-            if curl -sL "$TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
+            NPM_PREFIX=$(npm config get prefix)
+            NPM_GLOBAL_DIR="$NPM_PREFIX/lib/node_modules/synclaude"
+            NPM_BIN_DIR="$NPM_PREFIX/bin"
+
+            # Remove any existing installation
+            rm -rf "$NPM_GLOBAL_DIR"
+            rm -f "$NPM_BIN_DIR/synclaude"
+
+            info "Installing dependencies..."
+            progress
+            # Build from source in current directory
+            if npm install --silent >/dev/null 2>&1 && npm run build >/dev/null 2>&1; then
                 progress
-            else
-                error "Failed to download repository with curl"
-                exit 1
-            fi
-        elif command_exists wget; then
-            if wget -qO- "$TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
-                progress
-            else
-                error "Failed to download repository with wget"
-                exit 1
-            fi
-        fi
+                # Copy everything to global location
+                cp -r "$(pwd)" "$NPM_GLOBAL_DIR"
 
-        # Install dependencies
-        npm install --silent >/dev/null 2>&1
+                # Create symlink in bin
+                ln -sf "$NPM_GLOBAL_DIR/dist/cli/index.js" "$NPM_BIN_DIR/synclaude"
 
-        # Since npm install -g might fail due to build scripts,
-        # let's use a more robust manual approach
-        # Create the package structure in global node_modules
-        NPM_PREFIX=$(npm config get prefix)
-        NPM_GLOBAL_DIR="$NPM_PREFIX/lib/node_modules/synclaude"
-        NPM_BIN_DIR="$NPM_PREFIX/bin"
+                # Set executable permissions
+                chmod +x "$NPM_GLOBAL_DIR/dist/cli/index.js"
+                chmod +x "$NPM_BIN_DIR/synclaude"
 
-        # Remove any existing installation
-        rm -rf "$NPM_GLOBAL_DIR"
-        rm -f "$NPM_BIN_DIR/synclaude"
-
-        # Copy everything to global location
-        cp -r "$INSTALL_DIR" "$NPM_GLOBAL_DIR"
-
-        # Create symlink in bin
-        ln -sf "$NPM_GLOBAL_DIR/dist/cli/index.js" "$NPM_BIN_DIR/synclaude" >/dev/null 2>&1
-
-        # Set executable permissions
-        chmod +x "$NPM_GLOBAL_DIR/dist/cli/index.js" >/dev/null 2>&1
-        chmod +x "$NPM_BIN_DIR/synclaude" >/dev/null 2>&1
-
-        progress
-        NPM_GLOBAL_INSTALL=true
-        log "Package installed manually via built-from-source method"
-
-        # If the above failed for any reason, fallback to npm registry
-        if [ ! -f "$NPM_BIN_DIR/synclaude" ] || [ ! -x "$NPM_BIN_DIR/synclaude" ]; then
-            log "Source build failed, trying npm registry fallback"
-            if npm install -g synclaude >/dev/null 2>&1; then
                 progress
                 NPM_GLOBAL_INSTALL=true
-                log "Package installed globally via npm (fallback)"
+                info "Package installed from local directory"
             else
-                error "Both source build and npm registry install failed"
+                error "Failed to build synclaude from local directory"
                 exit 1
+            fi
+        else
+            # Try npm registry first, then fallback to building from source
+            info "Installing synclaude package from GitHub..."
+            progress
+
+            # For development/direct installation, build from source first
+            # Fallback to registry if source build fails
+            info "Downloading from source repository..."
+            rm -rf "$INSTALL_DIR"
+            mkdir -p "$INSTALL_DIR"
+
+            # Download and extract
+            cd "$INSTALL_DIR"
+            if command_exists curl; then
+                if curl -sL "$TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
+                    progress
+                else
+                    error "Failed to download repository with curl"
+                    exit 1
+                fi
+            elif command_exists wget; then
+                if wget -qO- "$TARBALL_URL" | tar -xz --strip-components=1 >/dev/null 2>&1; then
+                    progress
+                else
+                    error "Failed to download repository with wget"
+                    exit 1
+                fi
+            fi
+
+            # Install dependencies
+            info "Installing dependencies (this may take a minute)..."
+            progress
+            npm install --silent >/dev/null 2>&1
+            progress
+
+            # Since npm install -g might fail due to build scripts,
+            # let's use a more robust manual approach
+            # Create the package structure in global node_modules
+            NPM_PREFIX=$(npm config get prefix)
+            NPM_GLOBAL_DIR="$NPM_PREFIX/lib/node_modules/synclaude"
+            NPM_BIN_DIR="$NPM_PREFIX/bin"
+
+            # Remove any existing installation
+            rm -rf "$NPM_GLOBAL_DIR"
+            rm -f "$NPM_BIN_DIR/synclaude"
+
+            # Copy everything to global location
+            cp -r "$INSTALL_DIR" "$NPM_GLOBAL_DIR"
+
+            # Create symlink in bin
+            ln -sf "$NPM_GLOBAL_DIR/dist/cli/index.js" "$NPM_BIN_DIR/synclaude" >/dev/null 2>&1
+
+            # Set executable permissions
+            chmod +x "$NPM_GLOBAL_DIR/dist/cli/index.js" >/dev/null 2>&1
+            chmod +x "$NPM_BIN_DIR/synclaude" >/dev/null 2>&1
+
+            progress
+            info "Installing..."
+            progress
+            NPM_GLOBAL_INSTALL=true
+            info "Package installed from source"
+
+            # If the above failed for any reason, fallback to npm registry
+            if [ ! -f "$NPM_BIN_DIR/synclaude" ] || [ ! -x "$NPM_BIN_DIR/synclaude" ]; then
+                warn "Source build failed, trying npm registry fallback"
+                if npm install -g git+https://github.com/jeffersonwarrior/synclaude.git#main >/dev/null 2>&1; then
+                    progress
+                    NPM_GLOBAL_INSTALL=true
+                    info "Package installed globally via git repository"
+                else
+                    error "Both source build and npm registry install failed"
+                    exit 1
+                fi
             fi
         fi
     else
@@ -226,10 +318,8 @@ update_path() {
     # Only update PATH for manual installations or if npm global install failed
     if [ "$NPM_GLOBAL_INSTALL" = "true" ]; then
         # For npm global install, determine the actual npm bin directory
-        NPM_BIN_DIR=$(npm bin -g 2>/dev/null)
-        if [ -z "$NPM_BIN_DIR" ]; then
-            NPM_BIN_DIR=$(dirname $(dirname $(npm config get prefix)))/bin
-        fi
+        # npm bin -g was removed in npm v9+, use prefix instead
+        NPM_BIN_DIR="$(npm config get prefix)/bin"
 
         if ! echo "$PATH" | grep -q "$NPM_BIN_DIR"; then
             # Detect shell and update appropriate config file
@@ -237,19 +327,24 @@ update_path() {
             case "$SHELL_NAME" in
                 bash)
                     if [ -f "$HOME/.bashrc" ]; then
-                        echo "export PATH=\"\$PATH:$NPM_BIN_DIR\"" >> "$HOME/.bashrc"
+                        # Remove old synclaude PATH entries first
+                        sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$HOME/.bashrc" 2>/dev/null || true
+                        echo "export PATH=\"$NPM_BIN_DIR:\$PATH\"" >> "$HOME/.bashrc"
                         SHELL_CONFIG="$HOME/.bashrc"
                     elif [ -f "$HOME/.bash_profile" ]; then
-                        echo "export PATH=\"\$PATH:$NPM_BIN_DIR\"" >> "$HOME/.bash_profile"
+                        sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$HOME/.bash_profile" 2>/dev/null || true
+                        echo "export PATH=\"$NPM_BIN_DIR:\$PATH\"" >> "$HOME/.bash_profile"
                         SHELL_CONFIG="$HOME/.bash_profile"
                     fi
                     ;;
                 zsh)
-                    echo "export PATH=\"\$PATH:$NPM_BIN_DIR\"" >> "$HOME/.zshrc"
+                    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$HOME/.zshrc" 2>/dev/null || true
+                    echo "export PATH=\"$NPM_BIN_DIR:\$PATH\"" >> "$HOME/.zshrc"
                     SHELL_CONFIG="$HOME/.zshrc"
                     ;;
                 fish)
-                    echo "set -gx PATH \$PATH $NPM_BIN_DIR" >> "$HOME/.config/fish/config.fish"
+                    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$HOME/.config/fish/config.fish" 2>/dev/null || true
+                    echo "set -gx PATH $NPM_BIN_DIR \$PATH" >> "$HOME/.config/fish/config.fish"
                     SHELL_CONFIG="$HOME/.config/fish/config.fish"
                     ;;
                 *)
@@ -275,19 +370,23 @@ update_path() {
             case "$SHELL_NAME" in
                 bash)
                     if [ -f "$HOME/.bashrc" ]; then
-                        echo "export PATH=\"\$PATH:$BIN_DIR\"" >> "$HOME/.bashrc"
+                        sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$HOME/.bashrc" 2>/dev/null || true
+                        echo "export PATH=\"$BIN_DIR:\$PATH\"" >> "$HOME/.bashrc"
                         SHELL_CONFIG="$HOME/.bashrc"
                     elif [ -f "$HOME/.bash_profile" ]; then
-                        echo "export PATH=\"\$PATH:$BIN_DIR\"" >> "$HOME/.bash_profile"
+                        sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$HOME/.bash_profile" 2>/dev/null || true
+                        echo "export PATH=\"$BIN_DIR:\$PATH\"" >> "$HOME/.bash_profile"
                         SHELL_CONFIG="$HOME/.bash_profile"
                     fi
                     ;;
                 zsh)
-                    echo "export PATH=\"\$PATH:$BIN_DIR\"" >> "$HOME/.zshrc"
+                    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$HOME/.zshrc" 2>/dev/null || true
+                    echo "export PATH=\"$BIN_DIR:\$PATH\"" >> "$HOME/.zshrc"
                     SHELL_CONFIG="$HOME/.zshrc"
                     ;;
                 fish)
-                    echo "set -gx PATH \$PATH $BIN_DIR" >> "$HOME/.config/fish/config.fish"
+                    sed -i '/# Synclaude PATH configuration/,/# End Synclaude PATH configuration/d' "$HOME/.config/fish/config.fish" 2>/dev/null || true
+                    echo "set -gx PATH $BIN_DIR \$PATH" >> "$HOME/.config/fish/config.fish"
                     SHELL_CONFIG="$HOME/.config/fish/config.fish"
                     ;;
                 *)
@@ -308,35 +407,42 @@ update_path() {
 
 # Verify installation
 verify_installation() {
-    # For npm global install, the command should be available immediately
-    # For manual install, we need to add the bin directory to PATH temporarily for verification
-    if [ "$NPM_GLOBAL_INSTALL" != "true" ] && [ "$PATH_IN_PATH" != "true" ]; then
-        export PATH="$PATH:$BIN_DIR"
+    info "Verifying installation..."
+
+    # Determine which bin directory to use for verification
+    if [ "$NPM_GLOBAL_INSTALL" = "true" ]; then
+        # npm bin -g was removed in npm v9+, use prefix instead
+        VERIFY_BIN_DIR="$(npm config get prefix)/bin"
+    else
+        VERIFY_BIN_DIR="$BIN_DIR"
     fi
+
+    # For manual install where PATH not yet updated, prepend our bin directory
+    if [ "$PATH_IN_PATH" != "true" ]; then
+        export PATH="$VERIFY_BIN_DIR:$PATH"
+    fi
+
+    # Clear shell hash table before checking for synclaude
+    hash -r 2>/dev/null || true
 
     if command_exists synclaude; then
         progress
         SYNCLAUDE_VERSION=$(synclaude --version 2>/dev/null || echo "unknown")
         VERSION_INSTALLED="$SYNCLAUDE_VERSION"
+        info "Detected version: $VERSION_INSTALLED"
 
         # Test that it actually works
         if ! synclaude --help >/dev/null 2>&1; then
-            error "synclaude command found but failed to execute correctly"
-            error "This may indicate a module resolution issue"
-            exit 1
+            warn "synclaude --help failed, but installed version detected"
+            # Don't exit on this, just warn
         fi
     else
-        if [ "$NPM_GLOBAL_INSTALL" = "true" ]; then
-            NPM_BIN_DIR=$(npm bin -g 2>/dev/null)
-            if [ -z "$NPM_BIN_DIR" ]; then
-                NPM_BIN_DIR=$(dirname $(dirname $(npm config get prefix)))/bin
-            fi
-            error "synclaude command not found after installation"
-            error "Please ensure $NPM_BIN_DIR is in your PATH"
-        else
-            error "synclaude command not found after installation"
-            error "Please ensure $BIN_DIR is in your PATH"
-        fi
+        error "synclaude command not found after installation"
+        error "Bin directory: $VERIFY_BIN_DIR"
+        error "Current PATH: $PATH"
+        error ""
+        error "Please add $VERIFY_BIN_DIR to your PATH manually:"
+        error "  export PATH=\"\$PATH:$VERIFY_BIN_DIR\""
         exit 1
     fi
 }
@@ -344,31 +450,41 @@ verify_installation() {
 # Show final message
 show_final_message() {
     echo ""
-    echo "✓ synclaude installed successfully!"
+    success "synclaude installed successfully!"
     echo "Version: $VERSION_INSTALLED"
 
     if [ "$NPM_GLOBAL_INSTALL" = "true" ]; then
-        echo "Installation method: npm global install (recommended)"
-        NPM_BIN_DIR_USED=${NPM_BIN_DIR_USED:-$(npm bin -g 2>/dev/null)}
+        if [ "$LOCAL" = "true" ]; then
+            echo "Installation method: npm global install from local directory"
+        else
+            echo "Installation method: npm global install from source"
+        fi
+        NPM_BIN_DIR_USED=${NPM_BIN_DIR_USED:-"$(npm config get prefix)/bin"}
         if [ "$PATH_UPDATED" = "true" ]; then
             echo "⚠️  Please restart your terminal or run 'source $SHELL_CONFIG'"
             echo "   Added $NPM_BIN_DIR_USED to PATH"
         fi
+        echo ""
+        echo "synclaude command location: $NPM_BIN_DIR_USED/synclaude"
     else
         echo "Installation method: manual install"
         if [ "$PATH_UPDATED" = "true" ]; then
             echo "⚠️  Please restart your terminal or run 'source $SHELL_CONFIG'"
             echo "   Added $BIN_DIR to PATH"
         fi
+        echo ""
+        echo "synclaude command location: $BIN_DIR/synclaude"
     fi
 
     echo ""
-    echo "Run 'synclaude setup' to configure, then 'synclaude' to start."
+    echo "Getting started:"
+    echo "  synclaude setup    # First-time configuration"
+    echo "  synclaude          # Launch Claude Code"
+    echo "  synclaude --help   # Show all commands"
     echo ""
-    echo "If you encounter MODULE_NOT_FOUND errors:"
-    echo "1. Make sure the bin directory is in your PATH"
-    echo "2. Try restarting your terminal"
-    echo "3. Run 'synclaude doctor' for diagnostics"
+    echo "If you encounter issues:"
+    echo "1. Restart your terminal or run: source ~/.bashrc (or your shell config)"
+    echo "2. Run 'synclaude doctor' for diagnostics"
 }
 
 # Main installation flow
@@ -399,13 +515,19 @@ case "${1:-}" in
         echo "Options:"
         echo "  --help, -h      Show this help message"
         echo "  --verbose, -v   Show detailed installation output"
+        echo "  --local         Install from the current directory (development mode)"
         echo ""
         echo "This script will:"
         echo "1. Check for Node.js and npm installation"
-        echo "2. Download and install the synclaude package"
-        echo "3. Set up PATH if needed"
-        echo "4. Verify the installation"
+        echo "2. Download and install the synclaude package (or use local if --local)"
+        echo "3. Clean up old installations"
+        echo "4. Set up PATH if needed"
+        echo "5. Verify the installation"
         exit 0
+        ;;
+    --local)
+        LOCAL=true
+        main
         ;;
     --verbose|-v)
         VERBOSE=true

@@ -4,6 +4,29 @@ exports.ModelSelector = void 0;
 const jsx_runtime_1 = require("react/jsx-runtime");
 const react_1 = require("react");
 const ink_1 = require("ink");
+// Helper function to identify thinking-capable models
+function isThinkingModel(modelId) {
+    const id = modelId.toLowerCase();
+    // Direct "thinking" keyword
+    if (id.includes('thinking'))
+        return true;
+    // Known thinking model patterns
+    if (id.includes('minimax') && (id.includes('2') || id.includes('3')))
+        return true;
+    if (id.includes('deepseek-r1') || id.includes('deepseek-r2') || id.includes('deepseek-r3'))
+        return true;
+    if (id.includes('deepseek') && (id.includes('3.2') || id.includes('3-2')))
+        return true;
+    if (id.includes('qwq'))
+        return true;
+    if (id.includes('o1'))
+        return true; // OpenAI o1 series
+    if (id.includes('o3'))
+        return true; // OpenAI o3 series
+    if (id.includes('qwen3'))
+        return true; // Qwen 3 thinking variants
+    return false;
+}
 const ModelSelector = ({ models, onSelect, onCancel, searchPlaceholder = 'Search models...', initialRegularModel = null, initialThinkingModel = null }) => {
     const [searchQuery, setSearchQuery] = (0, react_1.useState)('');
     const [selectedIndex, setSelectedIndex] = (0, react_1.useState)(0);
@@ -121,7 +144,7 @@ const ModelSelector = ({ models, onSelect, onCancel, searchPlaceholder = 'Search
                         };
                         return ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Box, { flexDirection: "column", children: [(0, jsx_runtime_1.jsx)(ink_1.Box, { children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: actualIndex === selectedIndex ? 'green' :
                                                 isRegularSelected ? 'cyan' :
-                                                    isThinkingSelected ? 'yellow' : 'white', bold: actualIndex === selectedIndex || isRegularSelected || isThinkingSelected, children: [actualIndex === selectedIndex ? '▸ ' : '  ', getSelectionIndicator(), actualIndex + 1, ". ", model.getDisplayName()] }) }), (0, jsx_runtime_1.jsx)(ink_1.Box, { marginLeft: 4, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", dimColor: true, children: ["Provider: ", model.getProvider(), model.context_length && ` | Context: ${Math.round(model.context_length / 1024)}K`, model.quantization && ` | ${model.quantization}`, model.id.toLowerCase().includes('thinking') && ' | 🤔 Thinking'] }) })] }) }, model.id));
+                                                    isThinkingSelected ? 'yellow' : 'white', bold: actualIndex === selectedIndex || isRegularSelected || isThinkingSelected, children: [actualIndex === selectedIndex ? '▸ ' : '  ', getSelectionIndicator(), actualIndex + 1, ". ", model.getDisplayName()] }) }), (0, jsx_runtime_1.jsx)(ink_1.Box, { marginLeft: 4, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", dimColor: true, children: ["Provider: ", model.getProvider(), model.context_length && ` | Context: ${Math.round(model.context_length / 1024)}K`, model.quantization && ` | ${model.quantization}`, isThinkingModel(model.id) && ' | 🤔 Thinking'] }) })] }) }, model.id));
                     }), visibleEndIndex < filteredModels.length && ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u25BC ", filteredModels.length - visibleEndIndex, " more below"] }) })), (0, jsx_runtime_1.jsx)(ink_1.Box, { marginTop: 1, children: (0, jsx_runtime_1.jsx)(ink_1.Text, { color: "gray", children: "\u2191\u2193 Navigate | Enter: Regular Model + Launch | t: Toggle Thinking Model | Space: Launch | q: Quit" }) })] })) : ((0, jsx_runtime_1.jsxs)(ink_1.Box, { children: [(0, jsx_runtime_1.jsx)(ink_1.Text, { color: "yellow", children: "No models match your search." }), (0, jsx_runtime_1.jsx)(ink_1.Text, { color: "gray", children: "Try different search terms." })] }))] }));
 };
 exports.ModelSelector = ModelSelector;

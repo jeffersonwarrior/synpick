@@ -6,6 +6,22 @@ import { ModelSelector } from './components/ModelSelector';
 import { StatusMessage } from './components/StatusMessage';
 import { ProgressBar } from './components/ProgressBar';
 
+// Helper function to identify thinking-capable models
+function isThinkingModel(modelId: string): boolean {
+  const id = modelId.toLowerCase();
+  // Direct "thinking" keyword
+  if (id.includes('thinking')) return true;
+  // Known thinking model patterns
+  if (id.includes('minimax') && (id.includes('2') || id.includes('3'))) return true;
+  if (id.includes('deepseek-r1') || id.includes('deepseek-r2') || id.includes('deepseek-r3')) return true;
+  if (id.includes('deepseek') && (id.includes('3.2') || id.includes('3-2'))) return true;
+  if (id.includes('qwq')) return true;
+  if (id.includes('o1')) return true; // OpenAI o1 series
+  if (id.includes('o3')) return true; // OpenAI o3 series
+  if (id.includes('qwen3')) return true; // Qwen 3 thinking variants
+  return false;
+}
+
 export interface UIOptions {
   verbose?: boolean;
   quiet?: boolean;
@@ -92,11 +108,19 @@ export class UserInterface {
 
     models.forEach((model, index) => {
       const marker = selectedIndex === index ? '➤' : ' ';
-      console.log(`${marker} ${index + 1}. ${model.getDisplayName()}`);
-      console.log(`    Provider: ${model.getProvider()}`);
-      if (model.owned_by) {
-        console.log(`    Owner: ${model.owned_by}`);
+      const displayName = model.getDisplayName();
+      const thoughtsuffix = isThinkingModel(model.id) ? ' ' + chalk.yellow('🤔 Thinking') : '';
+
+      console.log(`${marker} ${index + 1}. ${chalk.cyan(displayName)}${thoughtsuffix}`);
+      console.log(`    ${chalk.gray('Provider:')} ${model.getProvider()}`);
+      if ((model as any).context_length) {
+        const contextK = Math.round((model as any).context_length / 1024);
+        console.log(`    ${chalk.gray('Context:')} ${contextK}K tokens`);
       }
+      if ((model as any).quantization) {
+        console.log(`    ${chalk.gray('Quantization:')} ${(model as any).quantization}`);
+      }
+      console.log(`    ${chalk.gray('ID:')} ${model.id}`);
       console.log('');
     });
   }

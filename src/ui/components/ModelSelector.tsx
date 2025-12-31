@@ -2,6 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
 import { ModelInfoImpl } from '../../models';
 
+// Helper function to identify thinking-capable models
+function isThinkingModel(modelId: string): boolean {
+  const id = modelId.toLowerCase();
+  // Direct "thinking" keyword
+  if (id.includes('thinking')) return true;
+  // Known thinking model patterns
+  if (id.includes('minimax') && (id.includes('2') || id.includes('3'))) return true;
+  if (id.includes('deepseek-r1') || id.includes('deepseek-r2') || id.includes('deepseek-r3')) return true;
+  if (id.includes('deepseek') && (id.includes('3.2') || id.includes('3-2'))) return true;
+  if (id.includes('qwq')) return true;
+  if (id.includes('o1')) return true; // OpenAI o1 series
+  if (id.includes('o3')) return true; // OpenAI o3 series
+  if (id.includes('qwen3')) return true; // Qwen 3 thinking variants
+  return false;
+}
+
 interface ModelSelectorProps {
   models: ModelInfoImpl[];
   onSelect: (regularModel: ModelInfoImpl | null, thinkingModel: ModelInfoImpl | null) => void;
@@ -207,7 +223,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                       Provider: {model.getProvider()}
                       {(model as any).context_length && ` | Context: ${Math.round((model as any).context_length / 1024)}K`}
                       {(model as any).quantization && ` | ${model.quantization}`}
-                      {model.id.toLowerCase().includes('thinking') && ' | 🤔 Thinking'}
+                      {isThinkingModel(model.id) && ' | 🤔 Thinking'}
                     </Text>
                   </Box>
                 </Box>

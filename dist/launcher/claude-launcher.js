@@ -64,6 +64,8 @@ class ClaudeLauncher {
         env.ANTHROPIC_DEFAULT_MODEL = model;
         // Set Claude Code subagent model
         env.CLAUDE_CODE_SUBAGENT_MODEL = model;
+        // Set max token size (default 128000 if not specified)
+        env.CLAUDE_CODE_MAX_TOKEN_SIZE = (options.maxTokenSize ?? 128000).toString();
         // Set thinking model if provided
         if (options.thinkingModel) {
             env.ANTHROPIC_THINKING_MODEL = options.thinkingModel;
@@ -93,22 +95,41 @@ class ClaudeLauncher {
                 stdio: 'pipe',
             });
             let output = '';
+            let resolved = false;
             child.stdout?.on('data', (data) => {
                 output += data.toString();
             });
             child.on('close', (code) => {
-                if (code === 0) {
-                    resolve(output.trim());
+                if (!resolved && code === 0) {
+                    resolved = true;
+                    // Parse version from output like "claude 2.0.76" or "2.0.76"
+                    const match = output.trim().match(/(\d+\.\d+\.\d+)/);
+                    resolve(match?.[1] ?? null);
                 }
-                else {
+                else if (!resolved) {
+                    resolved = true;
                     resolve(null);
                 }
             });
             child.on('error', () => {
-                resolve(null);
+                if (!resolved) {
+                    resolved = true;
+                    resolve(null);
+                }
             });
             // Force resolution after timeout
-            setTimeout(() => resolve(null), 5000);
+            setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    try {
+                        child.kill();
+                    }
+                    catch {
+                        // Ignore
+                    }
+                    resolve(null);
+                }
+            }, 5000);
         });
     }
     setClaudePath(path) {

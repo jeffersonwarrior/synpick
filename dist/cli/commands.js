@@ -108,7 +108,7 @@ function createProgram() {
     });
     configCmd
         .command('set <key> <value>')
-        .description('Set configuration value (keys: apiKey, baseUrl, modelsApiUrl, cacheDurationHours, selectedModel, selectedThinkingModel)')
+        .description('Set configuration value (keys: apiKey, baseUrl, modelsApiUrl, cacheDurationHours, selectedModel, selectedThinkingModel, autoUpdateClaudeCode, claudeCodeUpdateCheckInterval, maxTokenSize)')
         .action(async (key, value) => {
         const app = new app_1.SyntheticClaudeApp();
         await app.setConfig(key, value);
@@ -135,6 +135,23 @@ function createProgram() {
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
         await app.doctor();
+    });
+    // Update command - update Claude Code
+    program
+        .command('update')
+        .description('Update Claude Code to the latest version')
+        .option('-f, --force', 'Force update even if already up to date')
+        .action(async (options) => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.updateClaudeCode(options.force);
+    });
+    // Check update command - check for available updates
+    program
+        .command('check-update')
+        .description('Check if there are Claude Code updates available')
+        .action(async () => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.checkForUpdates();
     });
     // Dangerous command - launch Claude Code with --dangerously-skip-permissions
     program
@@ -191,6 +208,17 @@ function createProgram() {
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
         await app.cacheInfo();
+    });
+    // Install command - install synclaude from local directory to system-wide
+    program
+        .command('install')
+        .description('Install synclaude from local directory to system-wide')
+        .option('-v, --verbose', 'Show detailed installation output')
+        .option('-f, --force', 'Force reinstallation even if already installed')
+        .option('--skip-path', 'Skip PATH updates')
+        .action(async (options) => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.localInstall(options);
     });
     return program;
 }
