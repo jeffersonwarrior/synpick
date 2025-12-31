@@ -17,7 +17,14 @@ INSTALL_DIR="$HOME/.local/share/synclaude"
 BIN_DIR="$HOME/.local/bin"
 REPO_URL="https://github.com/jeffersonwarrior/synclaude"
 # Specify version to install from GitHub releases
-SYNCLAUDE_VERSION="${SYNCLAUDE_VERSION:-1.6.0}"
+# Read from version.txt if available in the source directory, otherwise use default
+if [ -f "$(dirname "$0")/version.txt" ]; then
+    SYNCLAUDE_VERSION="${SYNCLAUDE_VERSION:-$(cat "$(dirname "$0")/version.txt" | tr -d '[:space:]')}"
+elif [ -f "version.txt" ]; then
+    SYNCLAUDE_VERSION="${SYNCLAUDE_VERSION:-$(cat version.txt | tr -d '[:space:]')}"
+else
+    SYNCLAUDE_VERSION="${SYNCLAUDE_VERSION:-1.6.1}"
+fi
 # Use GitHub releases instead of main branch to get specific version
 TARBALL_URL="https://github.com/jeffersonwarrior/synclaude/archive/refs/tags/v${SYNCLAUDE_VERSION}.tar.gz"
 

@@ -4,19 +4,30 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { normalizeDangerousFlags } from '../utils/banner';
 
+function getVersion(): string {
+  // Read version from version.txt first, fallback to package.json
+  const versionTxtPath = join(__dirname, '../../version.txt');
+  try {
+    const version = readFileSync(versionTxtPath, 'utf8').trim();
+    if (version) return version;
+  } catch {
+    // version.txt not found, fall through to package.json
+  }
+
+  // Fallback to package.json
+  const packageJsonPath = join(__dirname, '../../package.json');
+  return JSON.parse(readFileSync(packageJsonPath, 'utf8')).version;
+}
+
 export function createProgram(): Command {
   const program = new Command();
-
-  // Read version from package.json
-  const packageJsonPath = join(__dirname, '../../package.json');
-  const packageVersion = JSON.parse(readFileSync(packageJsonPath, 'utf8')).version;
 
   program
     .name('synclaude')
     .description(
       'Interactive model selection tool for Claude Code with Synthetic AI models\n\nAdditional Claude Code flags (e.g., --dangerously-skip-permissions) are passed through to Claude Code.'
     )
-    .version(packageVersion);
+    .version(getVersion());
 
   program
     .option('-m, --model <model>', 'Use specific model (skip selection)')

@@ -71,6 +71,7 @@
   },
   "files": [
     "dist/",
+    "version.txt",
     "README.md",
     "USAGE.md",
     "LICENSE",
