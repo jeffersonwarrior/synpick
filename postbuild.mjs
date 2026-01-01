@@ -71,7 +71,9 @@ async function processFile(filePath) {
     processedImports.add(importPath);
 
     const resolved = await resolveImportToJsExtension(importPath, fileDir);
-    importReplacements.push({ from: fullMatch, to: `from '${resolved}'` });
+    // Normalize to forward slashes for cross-platform compatibility
+    const normalizedResolved = resolved.split(path.sep).join('/');
+    importReplacements.push({ from: fullMatch, to: `from '${normalizedResolved}'` });
   }
 
   // Apply all replacements
@@ -97,7 +99,9 @@ async function processFile(filePath) {
     processedImports.add(importPath);
 
     const resolved = await resolveImportToJsExtension(importPath, fileDir);
-    importReplacements.push({ from: fullMatch, to: `import('${resolved}')` });
+    // Normalize to forward slashes for cross-platform compatibility
+    const normalizedResolved = resolved.split(path.sep).join('/');
+    importReplacements.push({ from: fullMatch, to: `import('${normalizedResolved}')` });
   }
 
   for (const replacement of importReplacements) {
