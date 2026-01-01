@@ -363,3 +363,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues**: [GitHub Issues](https://github.com/jeffersonwarrior/synpick/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/jeffersonwarrior/synpick/discussions)
 - **Synthetic API**: [https://dev.synthetic.new](https://dev.synthetic.new)
+
+
+---
+
+## AI Code Review
+
+This project uses Greptile for automated PR reviews powered by Claude Sonnet 4.3.
+
+See `greptile.json` for review configuration.
+
