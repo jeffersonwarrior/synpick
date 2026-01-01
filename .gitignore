@@ -144,3 +144,7 @@ out
 .svelte-kit
 
 # End of https://www.toptal.com/developers/gitignore/api/node
+
+# Local documentation (kept local, not tracked)
+codedocs/
+CICD.md
