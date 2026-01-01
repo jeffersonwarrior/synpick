@@ -1,4 +1,4 @@
-import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from 'react/jsx-runtime';
 import { Box, Text } from 'ink';
 import { BYTES_PER_KB, UI_MARGIN_BOTTOM } from '../../utils/constants.js';
 export const ModelList = ({ models, selectedIndex, showCategories: _showCategories = false, }) => {

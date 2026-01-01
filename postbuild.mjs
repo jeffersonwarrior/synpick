@@ -115,6 +115,17 @@ async function processFile(filePath) {
     content = content.replace(replacement.from, replacement.to);
   }
 
+  // Normalize Windows backslashes to forward slashes in import paths (ESM requires /)
+  // This fixes "Invalid Unicode escape sequence" errors on Windows
+  content = content.replace(/from\s+['"]([^'"]+)['"]/g, (match, importPath) => {
+    const normalized = importPath.replace(/\\/g, '/');
+    return `from '${normalized}'`;
+  });
+  content = content.replace(/import\s*\(\s*['"]([^'"]+)['"]\s*\)/g, (match, importPath) => {
+    const normalized = importPath.replace(/\\/g, '/');
+    return `import('${normalized}')`;
+  });
+
   await fs.writeFile(filePath, content, 'utf-8');
 }
 

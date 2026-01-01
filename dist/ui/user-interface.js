@@ -1,4 +1,4 @@
-import { jsx as _jsx } from "react/jsx-runtime";
+import { jsx as _jsx } from 'react/jsx-runtime';
 import { render } from 'ink';
 import chalk from 'chalk';
 import { createInterface } from 'readline';

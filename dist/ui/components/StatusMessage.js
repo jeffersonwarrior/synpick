@@ -1,4 +1,4 @@
-import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
+import { jsxs as _jsxs, jsx as _jsx } from 'react/jsx-runtime';
 import { Box, Text } from 'ink';
 const statusConfig = {
     info: { color: 'blue', icon: 'ℹ' },

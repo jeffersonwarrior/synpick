@@ -1,4 +1,4 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from 'react/jsx-runtime';
 import { Box, Text } from 'ink';
 import { PERCENTAGE_MIN, PERCENTAGE_MAX, DEFAULT_PROGRESS_BAR_WIDTH, UI_MARGIN_BOTTOM, } from '../../utils/constants.js';
 export const ProgressBar = ({ current, total, label, width = DEFAULT_PROGRESS_BAR_WIDTH, character = '█', backgroundColor = 'gray', fillColor = 'green', }) => {
