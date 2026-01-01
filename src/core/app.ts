@@ -299,7 +299,7 @@ export class SyntheticClaudeApp {
 
       if (comparison <= 0 && !force) {
         if (comparison === 0) {
-          this.ui.info('Synclaude is already up to date');
+          this.ui.info('SynPick is already up to date');
         } else {
           this.ui.info(
             `Current version (${currentVersion}) is newer than available (${latestVersion})`
@@ -308,32 +308,19 @@ export class SyntheticClaudeApp {
         return;
       }
 
-      // Update synpick via the install script
-      this.ui.info('Updating synpick from GitHub...');
+      // Update synpick via npm global update
+      this.ui.info('Updating synpick via npm...');
 
       try {
-        // Download and run the installer from GitHub
-        execSync(
-          `curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synpick/main/scripts/install.sh | bash`,
-          { stdio: 'pipe' }
-        );
+        execSync('npm update -g synpick@latest', { stdio: 'pipe' });
       } catch {
-        this.ui.info('Remote installer failed, trying npm install...');
-
-        // Fallback: try npm install from GitHub
-        // Note: we can't direct install from GitHub due to npm limitations,
-        // but we can try to update if the user has npm access
-        try {
-          execSync('npm install -g synpick@latest', { stdio: 'pipe' });
-        } catch {
-          // Final fallback - show manual instructions
-          this.ui.info('Automatic update failed');
-          this.ui.info('Please update manually:');
-          this.ui.info(
-            '  curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synpick/main/scripts/install.sh | bash'
-          );
-          throw new Error('Automatic update unavailable');
-        }
+        // Fallback - show manual instructions
+        this.ui.info('Automatic update failed');
+        this.ui.info('Please update manually:');
+        this.ui.info(
+          '  curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/synpick/main/scripts/install.sh | bash'
+        );
+        throw new Error('Automatic update unavailable');
       }
 
       // Verify the update
@@ -341,9 +328,9 @@ export class SyntheticClaudeApp {
 
       if (newVersion === latestVersion || force) {
         const prevMsg = currentVersion !== newVersion ? ` (was ${currentVersion})` : '';
-        this.ui.coloredSuccess(`Synclaude updated to ${newVersion}${prevMsg}`);
+        this.ui.coloredSuccess(`SynPick updated to ${newVersion}${prevMsg}`);
       } else {
-        this.ui.info(`Synclaude is now ${newVersion}, latest available is ${latestVersion}`);
+        this.ui.info(`SynPick is now ${newVersion}, latest available is ${latestVersion}`);
       }
     } catch (error) {
       this.ui.error(
@@ -654,7 +641,7 @@ export class SyntheticClaudeApp {
    * @returns Promise that resolves when setup is complete
    */
   async setup(): Promise<void> {
-    this.ui.coloredInfo("Welcome to Synclaude! Let's set up your configuration.");
+    this.ui.coloredInfo("Welcome to SynPick! Let's set up your configuration.");
     this.ui.info('==============================================');
 
     const config = this.configManager.config;

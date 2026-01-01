@@ -316,8 +316,8 @@ export async function addToPathIfNotExists(
     }
 
     // Check for our guard block to avoid duplicates
-    const guardStart = '# Synclaude PATH configuration';
-    const guardEnd = '# End Synclaude PATH configuration';
+    const guardStart = '# SynPick PATH configuration';
+    const guardEnd = '# End SynPick PATH configuration';
 
     if (config.includes(guardStart) && config.includes(guardEnd)) {
       // Update existing guard block
@@ -631,8 +631,8 @@ export async function uninstallSynclaude(
       const { configFile } = getShellInfo();
       try {
         let config = await fsPromises.readFile(configFile, 'utf-8');
-        const guardStart = '# Synclaude PATH configuration';
-        const guardEnd = '# End Synclaude PATH configuration';
+        const guardStart = '# SynPick PATH configuration';
+        const guardEnd = '# End SynPick PATH configuration';
 
         if (config.includes(guardStart) && config.includes(guardEnd)) {
           const beforeGuard = config.substring(0, config.indexOf(guardStart));

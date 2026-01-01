@@ -51,7 +51,7 @@ export function createBanner(options = {}) {
     const thinkingModel = config.selectedThinkingModel || 'None';
     const optionsStr = activeOptions.length > 0 ? activeOptions.join(', ') : 'None';
     return [
-        chalk.cyan.bold('SynClaude') + chalk.gray(` v${version}`),
+        chalk.cyan.bold('SynPick') + chalk.gray(` v${version}`),
         chalk.gray('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'),
         `${chalk.blue('Model:')}     ${chalk.cyan(defaultModel)}`,
         `${chalk.magenta('Thinking:')}  ${chalk.magenta(thinkingModel)}`,
