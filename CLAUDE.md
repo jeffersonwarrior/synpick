@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Synclaude is a modern TypeScript/Node.js interactive CLI tool that integrates Synthetic AI models with Claude Code. It provides model selection, configuration management, and seamless launching of Claude Code with various language models through synthetic endpoints.
+SynPick is a modern TypeScript/Node.js interactive CLI tool that integrates Synthetic AI models with Claude Code. It provides model selection, configuration management, and seamless launching of Claude Code with various language models through synthetic endpoints.
 
 **Note**: This is a fork of [jeffersonwarrior/synpick](https://github.com/jeffersonwarrior/synpick). When making changes or documenting, be aware this is not the original repository.
 

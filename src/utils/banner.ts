@@ -67,7 +67,7 @@ export function createBanner(options: BannerOptions = {}): string {
   const optionsStr = activeOptions.length > 0 ? activeOptions.join(', ') : 'None';
 
   return [
-    chalk.cyan.bold('SynClaude') + chalk.gray(` v${version}`),
+    chalk.cyan.bold('SynPick') + chalk.gray(` v${version}`),
     chalk.gray(
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
     ),
