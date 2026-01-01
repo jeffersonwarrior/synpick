@@ -1,5 +1,13 @@
 # Synpick
 
+![](https://img.shields.io/npm/v/synpick?style=flat-square)
+![](https://img.shields.io/npm/dm/synpick?style=flat-square)
+![](https://img.shields.io/node/v/synpick?style=flat-square)
+![](https://img.shields.io/github/actions/workflow/status/jeffersonwarrior/synpick/ci.yml?branch=main&style=flat-square)
+![](https://img.shields.io/github/actions/workflow/status/jeffersonwarrior/synpick/security.yml?branch=main&style=flat-square)
+![](https://img.shields.io/badge/CodeQL-passing-brightgreen?style=flat-square)
+![](https://img.shields.io/badge/license-MIT-green?style=flat-square)
+
 Interactive model selection tool for Claude Code with Synthetic AI models.
 
 ## Overview
