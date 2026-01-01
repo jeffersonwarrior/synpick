@@ -431,10 +431,9 @@ export class SyntheticClaudeApp {
         this.ui.coloredSuccess(`Thinking model saved: ${selectedThinkingModel.getDisplayName()}`);
       }
 
-      this.ui.highlightInfo(
-        'Now run "synpick" to start Claude Code with your selected model(s).',
-        ['synpick']
-      );
+      this.ui.highlightInfo('Now run "synpick" to start Claude Code with your selected model(s).', [
+        'synpick',
+      ]);
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -914,11 +913,7 @@ export class SyntheticClaudeApp {
       }
 
       this.ui.info('');
-      this.ui.highlightInfo('Getting started:', [
-        'synpick setup',
-        'synpick model',
-        'synpick',
-      ]);
+      this.ui.highlightInfo('Getting started:', ['synpick setup', 'synpick model', 'synpick']);
       this.ui.info('  synpick setup    # First-time configuration');
       this.ui.info('  synpick          # Launch Claude Code');
       this.ui.info('  synpick --help   # Show all commands');
