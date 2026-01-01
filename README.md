@@ -21,7 +21,7 @@ synpick is a modern TypeScript/Node.js application that provides a seamless inte
 
 ### Prerequisites
 
-- Node.js 18+ and npm installed
+- Node.js 20+ and npm installed
 - Synthetic API key (get one from [synthetic.new](https://synthetic.new))
 - Claude Code installed (get from [claude.com/product/claude-code](https://claude.com/product/claude-code))
 
@@ -53,7 +53,7 @@ npm install -g synpick
 #### Option 2: GitHub Release
 
 ```bash
-npm install -g https://github.com/jeffersonwarrior/synpick/releases/download/v1.6.1/synpick-1.6.1.tgz
+npm install -g https://github.com/jeffersonwarrior/synpick/releases/download/v1.6.2/synpick-1.6.2.tgz
 ```
 
 #### Option 3: One-line Installer
@@ -175,10 +175,10 @@ The update command:
 
 ```bash
 # Install specific version from npm
-npm install -g synpick@1.6.1
+npm install -g synpick@1.6.2
 
 # Or from GitHub release
-npm install -g https://github.com/jeffersonwarrior/synpick/releases/download/v1.6.1/synpick-1.6.1.tgz
+npm install -g https://github.com/jeffersonwarrior/synpick/releases/download/v1.6.2/synpick-1.6.2.tgz
 ```
 
 #### Check Current Version
@@ -267,14 +267,16 @@ When launching Claude Code, Synpick automatically sets:
 
 ## Troubleshooting
 
-### Recent Fixes (v1.6.1)
+### Recent Fixes (v1.6.2)
 
 This version includes:
-- ESM (ES Modules) compatibility - fixed `__dirname is not defined` and `require()` errors
-- Now available on npm registry: `npm install -g synpick`
-- Installer script now configures nvm for Node.js v24.12.0 automatically
-- All 227 tests passing across 12 test suites
-- Multiple installation options (npm, GitHub, install scripts)
+- Fixed Windows build failure (backslashes now normalized to forward slashes)
+- Fixed CI Security Scan and CodeQL issues
+- Updated CI to require Node 20+ (removed Node 18)
+- Cross-platform build support
+- Zod upgraded to 4.3.4
+- Updated GitHub Actions (checkout@v6, setup-node@v6, codeql-action@v4)
+- Codecov integration for coverage reporting
 
 ### Common Issues
 
@@ -284,9 +286,9 @@ This version includes:
 # Check your Node.js version
 node --version
 
-# Upgrade to Node.js 18+ if needed
-nvm install 18
-nvm use 18
+# Upgrade to Node.js 20+ if needed
+nvm install 20
+nvm use 20
 ```
 
 #### PATH Issues
@@ -351,7 +353,7 @@ synpick doctor
 - Follow ESLint and Prettier configurations
 - Write tests for new functionality
 - Update documentation for API changes
-- Ensure compatibility with Node.js 18+
+- Ensure compatibility with Node.js 20+
 
 ## License
 
@@ -369,7 +371,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## AI Code Review
 
-This project uses Greptile for automated PR reviews powered by Claude Sonnet 4.3.
-
-See `greptile.json` for review configuration.
+This project uses automated code review for PRs powered by AI.
 

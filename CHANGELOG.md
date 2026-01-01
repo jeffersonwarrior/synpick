@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.2] - 2026-01-01
+
+### Added
+- Codecov integration for coverage reporting in CI
+
+### Fixed
+- Fixed Windows build failure caused by backslashes in import paths (ESM requires forward slashes)
+- Fixed CI Security Scan failing when Snyk SARIF file doesn't exist
+- Fixed CodeQL Python analysis (removed - this is a TypeScript project, not Python)
+
+### Changed
+- Updated CI to require Node 20+ (removed Node 18 support)
+- Cross-platform build: moved chmod from shell to Node.js postbuild script
+- Upgraded zod from 4.3.3 to 4.3.4 (patch update for looseRecord patternProperties support)
+- Updated GitHub Actions: checkout@v6, setup-node@v6, codeql-action@v4
+
+### Removed
+- Cleaned up documentation clutter (removed codedocs/ directory and CICD.md)
+
 ## [1.6.1] - 2025-12-31
 
 ### Added
