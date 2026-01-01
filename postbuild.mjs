@@ -2,12 +2,23 @@
 // Post-build script to add .js extensions to imports for ESM compatibility
 
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const distDir = path.join(__dirname, 'dist');
+
+// Make CLI executable (cross-platform)
+const cliPath = path.join(distDir, 'cli', 'index.js');
+try {
+  // chmod 755 for Unix-like systems - Node.js handles this gracefully on Windows
+  fsSync.chmodSync(cliPath, 0o755);
+} catch (error) {
+  // On Windows or if permissions can't be set, continue silently
+  // The shebang + package.json bin entry handles execution
+}
 
 async function fileExists(filePath) {
   try {

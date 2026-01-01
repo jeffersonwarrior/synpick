@@ -8,7 +8,7 @@
   },
   "type": "module",
   "scripts": {
-    "build": "tsc && chmod +x dist/cli/index.js && node postbuild.mjs",
+    "build": "tsc && node postbuild.mjs",
     "build:tsc": "tsc",
     "dev": "ts-node src/index.ts",
     "start": "npm run build && node dist/cli/index.js",
